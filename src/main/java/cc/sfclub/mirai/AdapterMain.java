@@ -34,7 +34,7 @@ public class AdapterMain extends Plugin {
         auth.send()
                 .asSession()
                 .ifPresent(s -> {
-                    Core.getLogger().info("Logged in! Session: {}", s);
+                    Core.getLogger().info("Logged in!");
                     Cred.sessionKey = s;
                     String response= Verify.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)

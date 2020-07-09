@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.mirai.Config;
 import cc.sfclub.mirai.Packet;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,14 +16,22 @@ public class Release extends Packet {
         if(!json.has("msg"))return Optional.empty();
         return Optional.ofNullable(json.get("msg").getAsString());
     }
+
     @Override
     public String getTargetedPath() {
         return "release";
     }
+
     @Override
     public Release send() {
         return this.getClass().cast(super.send());
     }
+
+    @Override
+    public boolean debugPacketContent() {
+        return false;
+    }
+
     @Override
     public HttpMethod getMethod() {
         return HttpMethod.POST;
