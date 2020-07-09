@@ -55,6 +55,7 @@ public class AdapterMain extends Plugin {
                 .sessionKey(Cred.sessionKey)
                 .build()
                 .send()
-                .getRawResponse());
+                .asMessage().orElse("Unknown Error")
+        );
     }
 }
