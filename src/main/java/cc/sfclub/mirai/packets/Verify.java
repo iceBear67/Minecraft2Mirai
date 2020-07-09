@@ -11,13 +11,20 @@ public class Verify extends Packet {
         this.sessionKey=key;
         return this;
     }
-    public Verify qq(long qq){
-        this.qq=qq;
+
+    public Verify qq(long qq) {
+        this.qq = qq;
         return this;
     }
+
     @Override
     public String getTargetedPath() {
         return "verify";
+    }
+
+    @Override
+    public boolean debugPacketContent() {
+        return false;
     }
 
     @Override
