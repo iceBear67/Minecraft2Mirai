@@ -1,7 +1,9 @@
 package cc.sfclub.mirai.packets;
 
 import cc.sfclub.mirai.Packet;
+import lombok.Builder;
 
+@Builder
 public class Verify extends Packet {
     private String sessionKey;
     private long qq;

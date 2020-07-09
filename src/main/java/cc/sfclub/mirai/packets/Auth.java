@@ -3,22 +3,21 @@ package cc.sfclub.mirai.packets;
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Config;
 import cc.sfclub.mirai.Packet;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import lombok.Builder;
 
 import java.util.Optional;
 
+@Builder
 public class Auth extends Packet {
-    private String authKey= Config.getInst().authKey;
-    public Auth authKey(String authKey){
-        this.authKey=authKey;
-        return this;
-    }
+    private String authKey;
     @Override
     public String getTargetedPath() {
         return "auth";
+    }
+
+    @Override
+    public boolean debugPacketContent() {
+        return false;
     }
 
     @Override
