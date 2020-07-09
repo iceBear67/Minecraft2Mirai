@@ -1,0 +1,38 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.1.0"
+    }
+}
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group 'cc.sfclub'
+version '1.0-SNAPSHOT'
+shadowJar {
+    zip64 true
+    manifest {
+        attributes 'Main-Class': 'cc.sfclub.mirai.AdapterMain'
+        attributes 'Plugin-Name': 'MiraiAdapter'
+        attributes 'Plugin-Ver': '0.0.1'
+    }
+}
+
+repositories {
+    maven { url "https://jitpack.io" }
+    maven { url "https://libraries.minecraft.net" }
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.4.1'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+    compileOnly fileTree(dir: "libs",includes:["*.jar"])
+    //compileOnly 'com.github.saltedfishclub:PolarCore:48715ed'
+}
