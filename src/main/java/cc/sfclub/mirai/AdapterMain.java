@@ -9,8 +9,12 @@ import cc.sfclub.mirai.packets.Verify;
 import cc.sfclub.plugin.Plugin;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.WebSocket;
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class AdapterMain extends Plugin {
@@ -20,6 +24,10 @@ public class AdapterMain extends Plugin {
             .writeTimeout(10, TimeUnit.SECONDS)
             .connectTimeout(10, TimeUnit.SECONDS)
             .build();
+    @Getter
+    private static final EventBus MiraiEventBUs = EventBus.builder().build();
+    @Getter
+    private WebSocket webSocket;
 
     @Subscribe
     public void onServerStart(ServerStartedEvent e) {
@@ -34,14 +42,20 @@ public class AdapterMain extends Plugin {
         auth.send()
                 .asSession()
                 .ifPresent(s -> {
-                    Core.getLogger().info("Logged in!");
+                    Core.getLogger().info("[MiraiAdapter] Logged in!");
                     Cred.sessionKey = s;
-                    String response= Verify.builder().qq(Config.getInst().QQ)
+                    String response = Verify.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
                             .build()
                             .send()
                             .getRawResponse();
-                    Core.getLogger().info("Try verify: {}",response);
+                    Core.getLogger().info("[MiraiAdapter] Try verify: {}", response);
+                    Request request = new Request.Builder()
+                            .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
+                            .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
+                            .build();
+                    Core.getLogger().info("[MiraiAdapter] Connecting to {}", Config.getInst().baseUrl.replaceAll("http", "ws"));
+                    webSocket = httpClient.newWebSocket(request, new WebsocketListener());
                 });
         if (Cred.sessionKey == null)
             Core.getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
@@ -57,5 +71,8 @@ public class AdapterMain extends Plugin {
                 .send()
                 .asMessage().orElse("Unknown Error")
         );
+        if (webSocket != null) {
+            webSocket.close(1000, "onDisable");
+        }
     }
 }
