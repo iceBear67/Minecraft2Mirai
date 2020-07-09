@@ -17,7 +17,7 @@ public abstract class Packet {
     }
     public Request buildRequest(){
         String packet= Core.getGson().toJson(this);
-        Core.getLogger().info("[MiraiAdapter] new packet: {}",packet);
+        if(debugPacketContent() && Core.get().config().isDebug())Core.getLogger().info("[MiraiAdapter] new packet: {}",packet);
         Request.Builder builder=new Request.Builder().url(Config.getInst().baseUrl+getTargetedPath());
         if(getMethod()==HttpMethod.GET){
             builder.get();
@@ -25,6 +25,9 @@ public abstract class Packet {
             builder.post(RequestBody.create(packet, MediaType.parse(getMediaType())));
         }
         return builder.build();
+    }
+    public boolean debugPacketContent(){
+        return true;
     }
     @SneakyThrows
     public Packet send(){

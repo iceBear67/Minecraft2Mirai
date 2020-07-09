@@ -2,7 +2,9 @@ package cc.sfclub.mirai.packets;
 
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
+import lombok.Builder;
 
+@Builder
 public class About extends Packet {
     @Override
     public String getTargetedPath() {
