@@ -11,7 +11,7 @@ import java.util.Optional;
 @Builder
 public class Release extends Packet {
     private String sessionKey;
-    private long qq= Config.getInst().QQ;
+    private long qq;
     public Optional<String> asMessage(){
         JsonObject json=JsonParser.parseString(getRawResponse()).getAsJsonObject();
         if(!json.has("msg"))return Optional.empty();
@@ -21,7 +21,10 @@ public class Release extends Packet {
     public String getTargetedPath() {
         return "release";
     }
-
+    @Override
+    public Release send() {
+        return this.getClass().cast(super.send());
+    }
     @Override
     public HttpMethod getMethod() {
         return HttpMethod.POST;
