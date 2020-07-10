@@ -8,7 +8,6 @@ import cc.sfclub.mirai.bot.QQContact;
 import cc.sfclub.mirai.bot.QQGroup;
 import cc.sfclub.mirai.misc.UIDMap;
 import cc.sfclub.mirai.packets.*;
-import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.plugin.Plugin;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
@@ -18,10 +17,6 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,20 +36,11 @@ public class AdapterMain extends Plugin {
     private WebSocket wsEventListener;
     @Getter
     private WebSocket wsMessageListener;
-    @Getter
-    private Set<Class> messageTypes = new HashSet<>();
-
     @Subscribe
     public void onServerStart(ServerStartedEvent e) {
         Core.getLogger().info("Mirai-Adapter loading");
         Config conf = new Config(getDataFolder().toString());
         Config.setInst((Config) conf.saveDefaultOrLoad());
-
-        Reflections ref = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage("cc.sfclub.mirai.packets.received.message.types", this.getClass().getClassLoader())).setScanners(new SubTypesScanner()).addClassLoader(this.getClass().getClassLoader()));
-        ref.getSubTypesOf(MiraiTypeMessage.class).forEach(clazz -> {
-            if (Core.get().config().isDebug()) Core.getLogger().info("Loading: {}", clazz.getSimpleName());
-            messageTypes.add(clazz);
-        });
 
         if (!Core.get().ORM().exists(UIDMap.class)) {
             Core.get().ORM().create(UIDMap.class, false);
