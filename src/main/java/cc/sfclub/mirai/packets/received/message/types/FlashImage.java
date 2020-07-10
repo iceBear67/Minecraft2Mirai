@@ -1,11 +1,14 @@
 package cc.sfclub.mirai.packets.received.message.types;
 
-import cc.sfclub.mirai.packets.received.message.MiraiMessage;
+import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
+import lombok.Getter;
 
 @Builder
-public class FlashImage extends MiraiMessage {
+@Getter
+public class FlashImage extends MiraiTypeMessage {
     private String imageId;
     private String url;
     private String path;
+
 }

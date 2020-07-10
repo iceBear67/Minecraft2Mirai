@@ -9,10 +9,13 @@ public class Config extends JsonConfig {
     @Getter
     @Setter(AccessLevel.PROTECTED)
     private static Config inst;
-    public String baseUrl="http://localhost:8080/";
-    public long QQ=0L;
-    public String authKey="AuthKey_HERE";
-    public boolean displayMessage=false;
+    public String baseUrl = "http://localhost:8080/";
+    public long QQ = 0L;
+    public String authKey = "AuthKey_HERE";
+    public boolean displayMessage = false;
+    public final boolean autoCreateAccount = true;
+    public String sharedDir = "/tmp/"; //for Image storage and interaction with polarCore
+
     public Config(String rootDir) {
         super(rootDir);
     }

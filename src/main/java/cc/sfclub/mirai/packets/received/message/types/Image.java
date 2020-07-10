@@ -1,6 +1,6 @@
 package cc.sfclub.mirai.packets.received.message.types;
 
-import cc.sfclub.mirai.packets.received.message.MiraiMessage;
+import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 @Builder
-public class Image extends MiraiMessage {
+public class Image extends MiraiTypeMessage {
     private String imageId;
     private String url;
     @Deprecated

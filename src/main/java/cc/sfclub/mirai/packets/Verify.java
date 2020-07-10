@@ -23,11 +23,6 @@ public class Verify extends Packet {
     }
 
     @Override
-    public boolean debugPacketContent() {
-        return false;
-    }
-
-    @Override
     public HttpMethod getMethod() {
         return HttpMethod.POST;
     }
