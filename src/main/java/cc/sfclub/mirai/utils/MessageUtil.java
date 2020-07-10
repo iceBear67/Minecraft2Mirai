@@ -5,9 +5,11 @@ import cc.sfclub.mirai.misc.UIDMap;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.At;
+import cc.sfclub.mirai.packets.received.message.types.Image;
 import cc.sfclub.mirai.packets.received.message.types.Plain;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class MessageUtil {
@@ -31,13 +33,14 @@ public class MessageUtil {
             case "Source":
                 return "";//We don't need it in catcodes.
             case "At":
-                At at = (At) message;
-                builder.append("[At:").append(UIDMap.fromQQUIN(((At) message).getTarget())).append(']');
-                break;
+                builder.append("[At:").append(UIDMap.fromQQUIN(((At) message).getTarget()).orElseThrow(NullPointerException::new).getQQUIN()).append(']');
+                return builder.toString();
             case "AtAll":
                 return "[AtAll]";
             case "Image":
-                return "";//todo
+                Image image = (Image) message;
+                builder.append("[Image:").append(Base64.getUrlEncoder().encodeToString(image.getUrl().getBytes())).append(']');
+                return builder.toString();
             case "Plain":
                 return ((Plain) message).getText();
         }
