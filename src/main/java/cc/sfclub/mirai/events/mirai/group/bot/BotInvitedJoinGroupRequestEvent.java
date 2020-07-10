@@ -1,11 +1,11 @@
-package cc.sfclub.mirai.events.mirai.group;
+package cc.sfclub.mirai.events.mirai.group.bot;
 
 import cc.sfclub.mirai.Config;
 import cc.sfclub.mirai.packets.DealGroupInviteRequest;
 import lombok.Getter;
 
 @Getter
-public class BotInvitedJoinGroupRequestEvent extends GroupEvent {
+public class BotInvitedJoinGroupRequestEvent implements BotEvent {
     private long eventId;
     private long fromId;
     private long groupId;
