@@ -27,10 +27,6 @@ public class MessageUtil {
 
     public static String deserialzeTypeMessage(MiraiTypeMessage message) {
         StringBuilder builder = new StringBuilder();
-        Core.getLogger().info("Classloader: deserializer : {}", MessageUtil.class.getClassLoader().toString());
-        Core.getLogger().info("Classloader: TypeMessage: {}", message.getClass().getClassLoader().toString());
-        Core.getLogger().info("Classloader: Plain: {}", Plain.class.getClassLoader().toString());
-        Core.getLogger().info("Classloader: ThreadContext: {}", Thread.currentThread().getContextClassLoader().toString());
         switch (message.getType()) {
             case "Source":
                 return "";//We don't need it in catcodes.
