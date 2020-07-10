@@ -6,6 +6,7 @@ import cc.sfclub.events.server.ServerStoppingEvent;
 import cc.sfclub.mirai.packets.Auth;
 import cc.sfclub.mirai.packets.Release;
 import cc.sfclub.mirai.packets.Verify;
+import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.plugin.Plugin;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
@@ -59,6 +60,7 @@ public class AdapterMain extends Plugin {
                 });
         if (Cred.sessionKey == null)
             Core.getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
+        MessageUtil.isMiraiEvent("");
     }
 
     @Subscribe
