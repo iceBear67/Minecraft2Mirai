@@ -36,4 +36,9 @@ public class GroupMemberList extends Packet {
                 .getAsJsonArray().forEach(j -> senders.add(Core.getGson().fromJson(j, MiraiSender.class)));
         return senders;
     }
+
+    @Override
+    public boolean debugPacketContent() {
+        return false;
+    }
 }

@@ -30,7 +30,7 @@ public class WsMessageListener extends WebSocketListener {
         if (MessageUtil.isMiraiEvent(message.getType())) return;
         switch (message.getType()) {
             case "GroupMessage":
-                MiraiGroupMessage miraiGroupMessage = Core.getGson().fromJson(text, MiraiGroupMessage.class);
+                MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text).orElseThrow(IllegalArgumentException::new);
                 AdapterMain.getMiraiEventBus().post(miraiGroupMessage);
                 GroupMessageReceivedEvent groupMessage = new GroupMessageReceivedEvent(
                         UIDMap.fromQQUIN(miraiGroupMessage.getSender().getId())
@@ -41,6 +41,7 @@ public class WsMessageListener extends WebSocketListener {
                         "QQ",
                         miraiGroupMessage.getMessageId()
                 );
+
                 EventBus.getDefault().post(groupMessage);
                 if (Config.getInst().displayMessage) {
                     Core.getLogger().info("[MiraiAdapter] Group:{} Message:{}", groupMessage.getGroupId(), groupMessage.getMessage());

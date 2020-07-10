@@ -8,6 +8,7 @@ import cc.sfclub.mirai.bot.QQContact;
 import cc.sfclub.mirai.bot.QQGroup;
 import cc.sfclub.mirai.misc.UIDMap;
 import cc.sfclub.mirai.packets.*;
+import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.plugin.Plugin;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
@@ -17,6 +18,10 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,17 +36,26 @@ public class AdapterMain extends Plugin {
             .connectTimeout(10, TimeUnit.SECONDS)
             .build();
     @Getter
-    private static final EventBus MiraiEventBus = EventBus.builder().build();
+    private static final EventBus MiraiEventBus = EventBus.builder().logNoSubscriberMessages(false).build();
     @Getter
     private WebSocket wsEventListener;
     @Getter
     private WebSocket wsMessageListener;
+    @Getter
+    private Set<Class> messageTypes = new HashSet<>();
 
     @Subscribe
     public void onServerStart(ServerStartedEvent e) {
         Core.getLogger().info("Mirai-Adapter loading");
         Config conf = new Config(getDataFolder().toString());
         Config.setInst((Config) conf.saveDefaultOrLoad());
+
+        Reflections ref = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage("cc.sfclub.mirai.packets.received.message.types", this.getClass().getClassLoader())).setScanners(new SubTypesScanner()).addClassLoader(this.getClass().getClassLoader()));
+        ref.getSubTypesOf(MiraiTypeMessage.class).forEach(clazz -> {
+            if (Core.get().config().isDebug()) Core.getLogger().info("Loading: {}", clazz.getSimpleName());
+            messageTypes.add(clazz);
+        });
+
         if (!Core.get().ORM().exists(UIDMap.class)) {
             Core.get().ORM().create(UIDMap.class, false);
             Core.getLogger().info("Creating User-UIN Relation Table");
@@ -62,6 +76,23 @@ public class AdapterMain extends Plugin {
                             .send()
                             .getRawResponse();
                     Core.getLogger().info("[MiraiAdapter] Try verify: {}", response);
+                    //load groups
+                    Core.get().registerBot(new QQBot());
+                    Bot bot = Core.get().bot("QQ").orElseThrow(() -> new IllegalArgumentException("Unknown error"));
+                    GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
+                        Set<Contact> contactSet = new HashSet<>();
+                        //load group members
+                        GroupMemberList.builder().sessionKey(Cred.sessionKey)
+                                .target(g.getId())
+                                .build().send().asList().forEach(ms -> {
+                            QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
+                            contactSet.add(contact);
+                            bot.addContact(contact, true);
+                        });
+                        QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
+                        bot.addGroup(group, true);
+                    });
+
                     Request request = new Request.Builder()
                             .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
                             .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
@@ -76,24 +107,6 @@ public class AdapterMain extends Plugin {
                 });
         if (Cred.sessionKey == null)
             Core.getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
-        //load groups
-        Core.get().registerBot(new QQBot());
-        Bot bot = Core.get().bot("QQ").orElseThrow(() -> new IllegalArgumentException("Unknown error"));
-        GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
-            Set<Contact> contactSet = new HashSet<>();
-            //load group members
-            GroupMemberList.builder().sessionKey(Cred.sessionKey)
-                    .target(g.getId())
-                    .build().send().asList().forEach(ms -> {
-                QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
-                contactSet.add(contact);
-                bot.addContact(contact, true);
-            });
-            QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
-            bot.addGroup(group, true);
-        });
-        //EventBus.getDefault().register(new GroupMessageWrapper());
-
     }
 
     @Subscribe
