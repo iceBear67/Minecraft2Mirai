@@ -1,11 +1,11 @@
 package cc.sfclub.mirai.packets.received.message.types;
 
-import cc.sfclub.mirai.packets.received.message.MiraiMessage;
+import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class Xml extends MiraiMessage {
+public class Xml extends MiraiTypeMessage {
     private String xml;
 }

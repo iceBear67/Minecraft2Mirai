@@ -32,9 +32,11 @@ public abstract class Packet {
     }
     @SneakyThrows
     public Packet send(){
-        Response response=AdapterMain.getHttpClient().newCall(buildRequest()).execute();
-        rawResponse=response.body().string();
-        result= Core.getGson().fromJson(rawResponse,Status.class).asResult();
+        Response response = AdapterMain.getHttpClient().newCall(buildRequest()).execute();
+        rawResponse = response.body().string();
+        if (!rawResponse.startsWith("[")) {
+            result = Core.getGson().fromJson(rawResponse, Status.class).asResult();
+        }
         return this;
     }
     public abstract String getTargetedPath();

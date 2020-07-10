@@ -28,11 +28,6 @@ public class Release extends Packet {
     }
 
     @Override
-    public boolean debugPacketContent() {
-        return false;
-    }
-
-    @Override
     public HttpMethod getMethod() {
         return HttpMethod.POST;
     }
