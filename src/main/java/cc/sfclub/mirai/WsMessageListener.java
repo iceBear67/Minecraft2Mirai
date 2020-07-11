@@ -23,6 +23,12 @@ public class WsMessageListener extends WebSocketListener {
     }
 
     @Override
+    public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+        super.onClosed(webSocket, code, reason);
+        Core.getLogger().warn("[MiraiAdapter] Connection closed!! Reason:{}", reason);
+    }
+
+    @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
         MiraiMessage message = Core.getGson().fromJson(text, MiraiMessage.class);

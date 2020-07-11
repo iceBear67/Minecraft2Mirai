@@ -13,6 +13,7 @@ import cc.sfclub.mirai.packets.*;
 import cc.sfclub.plugin.Plugin;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
+import cc.sfclub.user.User;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
@@ -20,6 +21,7 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.nutz.dao.Cnd;
 
 import java.util.Base64;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ public class AdapterMain extends Plugin {
     private WebSocket wsEventListener;
     @Getter
     private WebSocket wsMessageListener;
+
     @Subscribe
     public void onServerStart(ServerStartedEvent e) {
         Core.getLogger().info("Mirai-Adapter loading");
@@ -99,13 +102,13 @@ public class AdapterMain extends Plugin {
             Core.getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
         Core.get().dispatcher().register(
                 LiteralArgumentBuilder.<Source>literal("mirai")
-                        /*.requires(source->{
-                            User user=Core.get().ORM().fetch(User.class, Cnd.where("UniqueID","=",source.getMessageEvent().getUserID()));
-                            if(user==null){
+                        .requires(source -> {
+                            User user = Core.get().ORM().fetch(User.class, Cnd.where("UniqueID", "=", source.getMessageEvent().getUserID()));
+                            if (user == null) {
                                 return false;
                             }
                             return user.hasPermission("mirai.admin");
-                        })*/
+                        })
                         .then(LiteralArgumentBuilder.<Source>literal("image")
                                 .executes(c -> {
                                     if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
@@ -115,6 +118,15 @@ public class AdapterMain extends Plugin {
                                     return 0;
                                 })
                         )
+                        .then(LiteralArgumentBuilder.<Source>literal("at")
+                                .executes(c -> {
+                                            if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
+                                                GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
+                                                m.getGroup().reply(m.getMessageID(), "[At:" + UIDMap.fromUUID(m.getUserID()) + "]");
+                                            }
+                                            return 0;
+                                        }
+                                ))
                         .executes(c -> {
                             if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
                                 GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
@@ -124,7 +136,6 @@ public class AdapterMain extends Plugin {
                         })
         );
     }
-
     @Subscribe
     public void onServerStop(ServerStoppingEvent e) {
         Core.getLogger().info("Logging out..");

@@ -36,14 +36,20 @@ public abstract class Packet {
         Response response = AdapterMain.getHttpClient().newCall(buildRequest()).execute();
         rawResponse = response.body().string();
         if (!rawResponse.startsWith("[")) {
+            if (response.code() != 200) {
+                Core.getLogger().info("Mirai-API-Http return an {}", response.code());
+                Core.getLogger().info("Response: ", response);
+                result = Result.HTTP_ERROR;
+                return this;
+            }
             try {
                 result = Core.getGson().fromJson(rawResponse, Status.class).asResult();
             } catch (JsonSyntaxException e) {
-                Core.getLogger().error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), getRawResponse());
+                Core.getLogger().error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
                 Core.getLogger().error("Request:", Core.getGson().toJson(this));
             }
             if (result != Result.SUCCESS) {
-                Core.getLogger().warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result.name());
+                Core.getLogger().warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
             }
         }
         return this;
@@ -72,6 +78,7 @@ public abstract class Packet {
         NO_PERMISSION,
         BOT_MUTED,
         MESSAGE_TOO_LONG,
+        HTTP_ERROR,
         UNKNOWN;
     }
 
