@@ -1,6 +1,7 @@
 package cc.sfclub.mirai;
 
 import cc.sfclub.core.Core;
+import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import okhttp3.MediaType;
@@ -35,10 +36,19 @@ public abstract class Packet {
         Response response = AdapterMain.getHttpClient().newCall(buildRequest()).execute();
         rawResponse = response.body().string();
         if (!rawResponse.startsWith("[")) {
-            result = Core.getGson().fromJson(rawResponse, Status.class).asResult();
+            try {
+                result = Core.getGson().fromJson(rawResponse, Status.class).asResult();
+            } catch (JsonSyntaxException e) {
+                Core.getLogger().error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), getRawResponse());
+                Core.getLogger().error("Request:", Core.getGson().toJson(this));
+            }
+            if (result != Result.SUCCESS) {
+                Core.getLogger().warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result.name());
+            }
         }
         return this;
     }
+
     public abstract String getTargetedPath();
     public abstract HttpMethod getMethod();
     public String getMediaType(){

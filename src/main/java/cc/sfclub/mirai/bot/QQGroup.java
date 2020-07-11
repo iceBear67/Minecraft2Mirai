@@ -4,7 +4,6 @@ import cc.sfclub.mirai.Cred;
 import cc.sfclub.mirai.packets.GroupMemberInfo;
 import cc.sfclub.mirai.packets.GroupMessage;
 import cc.sfclub.mirai.packets.GroupQuoteMessage;
-import cc.sfclub.mirai.packets.received.message.types.Plain;
 import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.transform.ChatGroup;
 import cc.sfclub.transform.Contact;
@@ -64,8 +63,7 @@ public class QQGroup extends ChatGroup {
         GroupMessage.builder()
                 .sessionKey(Cred.sessionKey)
                 .target(this.getID())
-                .messageChain(MessageUtil.buildChain()
-                        .append(Plain.builder().text(s).build()).build())
+                .messageChain(MessageUtil.deserializeCatCodes(s))
                 .build()
                 .send();
     }
@@ -75,8 +73,7 @@ public class QQGroup extends ChatGroup {
         GroupQuoteMessage.builder()
                 .sessionKey(Cred.sessionKey)
                 .target(this.getID())
-                .messageChain(MessageUtil.buildChain()
-                        .append(Plain.builder().text(s).build()).build())
+                .messageChain(MessageUtil.deserializeCatCodes(s))
                 .quote(l)
                 .build()
                 .send();
