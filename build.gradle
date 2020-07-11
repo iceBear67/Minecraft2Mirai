@@ -1,13 +1,7 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:5.1.0"
-    }
+plugins {
+    id "com.github.johnrengelman.shadow" version "6.0.0"
+    id 'java'
 }
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'cc.sfclub'
 version '1.0-SNAPSHOT'
@@ -20,12 +14,6 @@ shadowJar {
     }
 }
 
-repositories {
-    maven { url "https://jitpack.io" }
-    maven { url "https://libraries.minecraft.net" }
-    mavenCentral()
-}
-
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
@@ -33,6 +21,14 @@ dependencies {
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
-    compileOnly fileTree(dir: "libs")
-    //compileOnly 'com.github.saltedfishclub:PolarCore:48715ed'
+    compileOnly 'org.greenrobot:eventbus:3.2.0'
+    compileOnly 'org.slf4j:slf4j-api:1.7.30'
+    compileOnly 'com.github.saltedfishclub:PolarCore:4.3.5'
+}
+allprojects{
+    repositories {
+        maven { url "https://jitpack.io" }
+        maven { url "https://libraries.minecraft.net" }
+        mavenCentral()
+    }
 }
