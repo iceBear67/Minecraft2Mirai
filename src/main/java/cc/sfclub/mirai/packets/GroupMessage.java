@@ -24,7 +24,7 @@ public class GroupMessage extends Packet {
     }
 
     @Override
-    public Packet send() {
+    public GroupMessage send() {
         super.send();
         return this;
     }
