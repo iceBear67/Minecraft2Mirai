@@ -10,7 +10,6 @@ import cc.sfclub.mirai.packets.received.message.types.Image;
 import cc.sfclub.mirai.packets.received.message.types.Plain;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -78,7 +77,7 @@ public class MessageUtil {
             case "Plain":
                 return Plain.builder().text(args[1]).build();
             case "Image":
-                return Image.builder().url(Arrays.toString(Base64.getUrlDecoder().decode(args[1]))).build();
+                return Image.builder().url(new String(Base64.getUrlDecoder().decode(args[1]))).build();
         }
         Core.getLogger().warn("Unsupported type: {}", args[0]);
         return Plain.builder().text(catcode).build();

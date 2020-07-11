@@ -137,9 +137,11 @@ public class AdapterMain extends Plugin {
         );
         if (wsEventListener != null) {
             wsEventListener.close(1000, "onDisable");
+            wsEventListener.cancel();
         }
         if (wsMessageListener != null) {
             wsMessageListener.close(1000, "onDisable");
+            wsMessageListener.cancel();
         }
     }
 }
