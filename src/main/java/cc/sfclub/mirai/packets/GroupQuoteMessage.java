@@ -9,7 +9,7 @@ import java.util.List;
 
 @Builder
 public class GroupQuoteMessage extends Packet {
-    private int quote;
+    private long quote;
     private String sessionKey;
     private long target;
     private List<MiraiTypeMessage> messageChain;

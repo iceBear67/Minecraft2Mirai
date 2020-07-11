@@ -1,14 +1,16 @@
 package cc.sfclub.mirai.utils;
 
+import cc.sfclub.catcode.CatCodeHelper;
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.misc.UIDMap;
-import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.At;
+import cc.sfclub.mirai.packets.received.message.types.AtAll;
 import cc.sfclub.mirai.packets.received.message.types.Image;
 import cc.sfclub.mirai.packets.received.message.types.Plain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -50,18 +52,50 @@ public class MessageUtil {
         return "";
     }
 
+    public static List<MiraiTypeMessage> deserializeCatCodes(String catcode) {
+        List<MiraiTypeMessage> messages = new ArrayList<>();
+        for (String s : CatCodeHelper.spilt(catcode)) {
+            messages.add(deserializeSingleCatCode(s));
+        }
+        return messages;
+    }
+
+    public static MiraiTypeMessage deserializeSingleCatCode(String catcode) {
+        if (!catcode.startsWith("[")) {
+            return Plain.builder().text(catcode).build();
+        }
+        String code = catcode.replaceFirst("\\[", "");
+        code = code.substring(0, code.length() - 1);//去掉最后面那个]
+        String[] args = code.split(":");
+        if (args.length != 2) {
+            if ("AtAll".equals(code)) return AtAll.INST;
+            return Plain.builder().text(catcode).build();
+        }
+        switch (args[0]) {
+            case "At":
+                String userId = args[1];
+                return At.builder().target(UIDMap.fromUUID(userId).orElseThrow(NullPointerException::new).getQQUIN()).build();
+            case "Plain":
+                return Plain.builder().text(args[1]).build();
+            case "Image":
+                return Image.builder().url(Arrays.toString(Base64.getUrlDecoder().decode(args[1]))).build();
+        }
+        Core.getLogger().warn("Unsupported type: {}", args[0]);
+        return Plain.builder().text(catcode).build();
+    }
+
     public static MessageChainBuilder buildChain() {
         return new MessageChainBuilder();
     }
 
     public static class MessageChainBuilder {
-        private List<MiraiMessage> messageChain = new ArrayList<>();
+        private List<MiraiTypeMessage> messageChain = new ArrayList<>();
 
-        public List<MiraiMessage> build() {
+        public List<MiraiTypeMessage> build() {
             return messageChain;
         }
 
-        public MessageChainBuilder append(MiraiMessage m) {
+        public MessageChainBuilder append(MiraiTypeMessage m) {
             messageChain.add(m);
             return this;
         }
