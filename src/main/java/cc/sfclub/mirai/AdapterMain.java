@@ -1,6 +1,8 @@
 package cc.sfclub.mirai;
 
+import cc.sfclub.command.Source;
 import cc.sfclub.core.Core;
+import cc.sfclub.events.message.group.GroupMessageReceivedEvent;
 import cc.sfclub.events.server.ServerStartedEvent;
 import cc.sfclub.events.server.ServerStoppingEvent;
 import cc.sfclub.mirai.bot.QQBot;
@@ -11,6 +13,7 @@ import cc.sfclub.mirai.packets.*;
 import cc.sfclub.plugin.Plugin;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -18,6 +21,7 @@ import okhttp3.WebSocket;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -93,6 +97,32 @@ public class AdapterMain extends Plugin {
                 });
         if (Cred.sessionKey == null)
             Core.getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
+        Core.get().dispatcher().register(
+                LiteralArgumentBuilder.<Source>literal("mirai")
+                        /*.requires(source->{
+                            User user=Core.get().ORM().fetch(User.class, Cnd.where("UniqueID","=",source.getMessageEvent().getUserID()));
+                            if(user==null){
+                                return false;
+                            }
+                            return user.hasPermission("mirai.admin");
+                        })*/
+                        .then(LiteralArgumentBuilder.<Source>literal("image")
+                                .executes(c -> {
+                                    if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
+                                        GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
+                                        m.getGroup().reply(m.getMessageID(), "[Image:" + Base64.getUrlEncoder().encodeToString("https://i.loli.net/2020/07/11/RuBwdh89AezLHUO.jpg".getBytes()) + "]");
+                                    }
+                                    return 0;
+                                })
+                        )
+                        .executes(c -> {
+                            if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
+                                GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
+                                m.getGroup().reply(m.getMessageID(), "MiraiAdapter Running!");
+                            }
+                            return 0;
+                        })
+        );
     }
 
     @Subscribe

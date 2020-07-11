@@ -33,6 +33,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
-    compileOnly fileTree(dir: "libs",includes:["*.jar"])
+    compileOnly fileTree(dir: "libs")
     //compileOnly 'com.github.saltedfishclub:PolarCore:48715ed'
 }
