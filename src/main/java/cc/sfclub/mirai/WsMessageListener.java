@@ -27,7 +27,6 @@ public class WsMessageListener extends WebSocketListener {
         super.onClosed(webSocket, code, reason);
         Core.getLogger().warn("[MiraiAdapter] Connection closed!! Reason:{}", reason);
     }
-
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);

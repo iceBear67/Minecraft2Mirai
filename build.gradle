@@ -24,6 +24,7 @@ dependencies {
     compileOnly 'org.greenrobot:eventbus:3.2.0'
     compileOnly 'org.slf4j:slf4j-api:1.7.30'
     compileOnly 'com.github.saltedfishclub:PolarCore:4.3.5'
+    compileOnly group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
 }
 allprojects{
     repositories {
