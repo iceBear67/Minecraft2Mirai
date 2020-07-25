@@ -23,10 +23,11 @@ public class WsMessageListener extends WebSocketListener {
     }
 
     @Override
-    public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        super.onClosed(webSocket, code, reason);
-        Core.getLogger().warn("[MiraiAdapter] Connection closed!! Reason:{}", reason);
+    public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+        super.onClosing(webSocket, code, reason);
+        Core.getLogger().warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
     }
+
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
