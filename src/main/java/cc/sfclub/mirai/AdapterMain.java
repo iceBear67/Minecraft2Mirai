@@ -122,7 +122,7 @@ public class AdapterMain extends Plugin {
                                 .executes(c -> {
                                             if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
                                                 GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
-                                                m.getGroup().reply(m.getMessageID(), "[At:" + UIDMap.fromUUID(m.getUserID()) + "]");
+                                                m.getGroup().reply(m.getMessageID(), "[At:" + m.getUserID() + "]");
                                             }
                                             return 0;
                                         }
