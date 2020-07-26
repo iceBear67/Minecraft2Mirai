@@ -1,11 +1,11 @@
 package cc.sfclub.mirai.events.mirai.group;
 
-import cc.sfclub.mirai.packets.received.sender.MiraiSender;
+import cc.sfclub.mirai.packets.received.sender.MiraiGroupSender;
 import lombok.Getter;
 
 @Getter
 public class GroupEntranceAnnouncementChangeEvent extends GroupEvent {
     private String origin;
     private String current;
-    private MiraiSender operator;
+    private MiraiGroupSender operator;
 }

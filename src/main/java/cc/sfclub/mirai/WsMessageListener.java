@@ -52,6 +52,9 @@ public class WsMessageListener extends WebSocketListener {
                     Core.getLogger().info("[MiraiAdapter] Group:{} Message:{}", groupMessage.getGroupId(), groupMessage.getMessage());
                 }
                 break;
+            case "PrivateMessage":
+            case "TempMessage":
+                break;
         }
     }
 }

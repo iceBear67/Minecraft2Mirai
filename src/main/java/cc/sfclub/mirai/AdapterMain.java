@@ -2,6 +2,7 @@ package cc.sfclub.mirai;
 
 import cc.sfclub.command.Source;
 import cc.sfclub.core.Core;
+import cc.sfclub.events.MessageEvent;
 import cc.sfclub.events.message.group.GroupMessageReceivedEvent;
 import cc.sfclub.events.server.ServerStartedEvent;
 import cc.sfclub.events.server.ServerStoppingEvent;
@@ -27,6 +28,8 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class AdapterMain extends Plugin {
@@ -42,8 +45,11 @@ public class AdapterMain extends Plugin {
     private WebSocket wsEventListener;
     @Getter
     private WebSocket wsMessageListener;
+    @Getter
+    private ExecutorService threadPool = Executors.newFixedThreadPool(4);
 
     @Subscribe
+    @SuppressWarnings("all")
     public void onServerStart(ServerStartedEvent e) {
         Core.getLogger().info("Mirai-Adapter loading");
         Config conf = new Config(getDataFolder().toString());
@@ -72,20 +78,15 @@ public class AdapterMain extends Plugin {
                     //load groups
                     Core.get().registerBot(new QQBot());
                     Bot bot = Core.get().bot("QQ").orElseThrow(() -> new IllegalArgumentException("Unknown error"));
-                    GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
-                        Set<Contact> contactSet = new HashSet<>();
-                        //load group members
-                        GroupMemberList.builder().sessionKey(Cred.sessionKey)
-                                .target(g.getId())
-                                .build().send().asList().forEach(ms -> {
-                            QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
-                            contactSet.add(contact);
-                            bot.addContact(contact, true);
-                        });
-                        QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
-                        bot.addGroup(group, true);
+                    refreshContacts();
+                    threadPool.submit(() -> {
+                        try {
+                            Thread.sleep(300 * 1000);
+                        } catch (InterruptedException interruptedException) {
+                            interruptedException.printStackTrace();
+                        }
+                        refreshContacts();
                     });
-
                     Request request = new Request.Builder()
                             .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
                             .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
@@ -128,14 +129,45 @@ public class AdapterMain extends Plugin {
                                         }
                                 ))
                         .executes(c -> {
-                            if (c.getSource().getMessageEvent() instanceof GroupMessageReceivedEvent) {
-                                GroupMessageReceivedEvent m = (GroupMessageReceivedEvent) c.getSource().getMessageEvent();
-                                m.getGroup().reply(m.getMessageID(), "MiraiAdapter Running!");
-                            }
+                            MessageEvent m = c.getSource().getMessageEvent();
+                            m.reply(m.getMessageID(), "MiraiAdapter Running!");
                             return 0;
                         })
+                        .then(LiteralArgumentBuilder.<Source>literal("pm")
+                                .executes(c -> {
+                                    MessageEvent me = c.getSource().getMessageEvent();
+                                    Core.get().bot("QQ").get().asContact(me.getUserID()).get().sendMessage("HI~");
+                                    return 0;
+                                })
+                        )
+
         );
     }
+
+    public void refreshContacts() {
+        QQBot bot = (QQBot) Core.get().bot("QQ").get();
+        GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
+            Set<Contact> contactSet = new HashSet<>();
+            //load group members
+            GroupMemberList.builder().sessionKey(Cred.sessionKey)
+                    .target(g.getId())
+                    .build().send().asList().forEach(ms -> {
+                QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
+                contactSet.add(contact);
+                QQBot.contactsAndGroup.put(contact.getID(), g.getId());
+                bot.addContact(contact, true);
+            });
+
+            QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
+            bot.addGroup(group, true);
+        });
+        Core.getLogger().info("[MiraiAdapter] Updating friendList");
+        FriendList.builder().sessionKey(Cred.sessionKey).build()
+                .send().asGroups().forEach(contact -> {
+            QQBot.contactsAndGroup.put(contact.getId(), -1L);
+        });
+    }
+
     @Subscribe
     public void onServerStop(ServerStoppingEvent e) {
         Core.getLogger().info("Logging out..");
@@ -148,11 +180,10 @@ public class AdapterMain extends Plugin {
         );
         if (wsEventListener != null) {
             wsEventListener.close(1000, "onDisable");
-            wsEventListener.cancel();
         }
         if (wsMessageListener != null) {
             wsMessageListener.close(1000, "onDisable");
-            wsMessageListener.cancel();
         }
+        threadPool.shutdownNow();
     }
 }

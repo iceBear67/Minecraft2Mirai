@@ -3,6 +3,8 @@ package cc.sfclub.mirai.bot;
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Cred;
 import cc.sfclub.mirai.misc.UIDMap;
+import cc.sfclub.mirai.packets.FriendMessage;
+import cc.sfclub.mirai.packets.FriendQuoteMessage;
 import cc.sfclub.mirai.packets.TempMessage;
 import cc.sfclub.mirai.packets.TempQuoteMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
@@ -27,6 +29,10 @@ public class QQContact extends Contact {
         return nick;
     }
 
+    public boolean isTemp() {
+        return QQBot.contactsAndGroup.get(this.getID()) != -1;
+    }
+
     @Override
     public String getUsername() {
         return nick;
@@ -40,11 +46,19 @@ public class QQContact extends Contact {
 
     @Override
     public void sendMessage(String s) {
-        TempMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).target(super.getID()).build().send();
+        if (isTemp())
+            TempMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).target(super.getID()).group(QQBot.contactsAndGroup.get(super.getID())).build().send();
+        else {
+            FriendMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).target(super.getID()).build().send();
+        }
     }
 
     @Override
     public void reply(long l, String s) {
-        TempQuoteMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).quote((int) l).target(super.getID()).build().send();
+        if (isTemp())
+            TempQuoteMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).quote((int) l).target(super.getID()).group(QQBot.contactsAndGroup.get(super.getID())).build().send();
+        else {
+            FriendQuoteMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).quote((int) l).target(super.getID()).build().send();
+        }
     }
 }

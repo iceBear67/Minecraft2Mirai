@@ -11,6 +11,7 @@ public class TempQuoteMessage extends Packet {
     private String sessionKey;
     private long target;
     private int quote;
+    private long group;
     private List<MiraiTypeMessage> messageChain;
 
     @Override
