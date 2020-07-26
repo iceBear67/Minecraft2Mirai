@@ -1,7 +1,11 @@
 package cc.sfclub.mirai.bot;
 
 import cc.sfclub.core.Core;
+import cc.sfclub.mirai.Cred;
 import cc.sfclub.mirai.misc.UIDMap;
+import cc.sfclub.mirai.packets.TempMessage;
+import cc.sfclub.mirai.packets.TempQuoteMessage;
+import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.transform.Contact;
 import cc.sfclub.user.User;
 import lombok.Getter;
@@ -36,11 +40,11 @@ public class QQContact extends Contact {
 
     @Override
     public void sendMessage(String s) {
-
+        TempMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).target(super.getID()).build().send();
     }
 
     @Override
     public void reply(long l, String s) {
-
+        TempQuoteMessage.builder().messageChain(MessageUtil.deserializeCatCodes(s)).sessionKey(Cred.sessionKey).quote((int) l).target(super.getID()).build().send();
     }
 }
