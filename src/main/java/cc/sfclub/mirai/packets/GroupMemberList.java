@@ -2,7 +2,7 @@ package cc.sfclub.mirai.packets;
 
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
-import cc.sfclub.mirai.packets.received.sender.MiraiSender;
+import cc.sfclub.mirai.packets.received.sender.MiraiGroupSender;
 import com.google.gson.JsonParser;
 import lombok.Builder;
 
@@ -30,10 +30,10 @@ public class GroupMemberList extends Packet {
         return this;
     }
 
-    public Set<MiraiSender> asList() {
-        Set<MiraiSender> senders = new HashSet<>();
+    public Set<MiraiGroupSender> asList() {
+        Set<MiraiGroupSender> senders = new HashSet<>();
         JsonParser.parseString(getRawResponse())
-                .getAsJsonArray().forEach(j -> senders.add(Core.getGson().fromJson(j, MiraiSender.class)));
+                .getAsJsonArray().forEach(j -> senders.add(Core.getGson().fromJson(j, MiraiGroupSender.class)));
         return senders;
     }
 

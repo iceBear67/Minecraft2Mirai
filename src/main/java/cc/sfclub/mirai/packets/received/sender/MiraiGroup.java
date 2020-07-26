@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class MiraiGroup {
-    private int id;
+    private long id;
     private String name;
     private String permission;
 }

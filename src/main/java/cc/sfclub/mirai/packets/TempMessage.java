@@ -10,6 +10,7 @@ import java.util.List;
 public class TempMessage extends Packet {
     private String sessionKey;
     private long target;
+    private long group;
     private List<MiraiTypeMessage> messageChain;
 
     @Override

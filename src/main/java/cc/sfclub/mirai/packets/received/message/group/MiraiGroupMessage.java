@@ -4,7 +4,7 @@ import cc.sfclub.core.Core;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.Source;
-import cc.sfclub.mirai.packets.received.sender.MiraiSender;
+import cc.sfclub.mirai.packets.received.sender.MiraiGroupSender;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -19,7 +19,7 @@ import java.util.Optional;
 public class MiraiGroupMessage extends MiraiMessage {
 
     private transient List<MiraiTypeMessage> messageChain = new ArrayList<>();
-    private MiraiSender sender;
+    private MiraiGroupSender sender;
 
     public int getMessageId() {
         if (messageChain.isEmpty() || !(messageChain.get(0) instanceof Source)) return -1;
