@@ -1,9 +1,11 @@
 package cc.sfclub.mirai;
 
 import cc.sfclub.core.Core;
+import cc.sfclub.events.message.direct.PrivateMessageReceivedEvent;
 import cc.sfclub.events.message.group.GroupMessageReceivedEvent;
 import cc.sfclub.mirai.misc.UIDMap;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
+import cc.sfclub.mirai.packets.received.message.contact.MiraiContactMessage;
 import cc.sfclub.mirai.packets.received.message.group.MiraiGroupMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
 import lombok.SneakyThrows;
@@ -54,6 +56,21 @@ public class WsMessageListener extends WebSocketListener {
                 break;
             case "PrivateMessage":
             case "TempMessage":
+                MiraiContactMessage.parseJson(text).ifPresent(Msg -> {
+                    AdapterMain.getMiraiEventBus().post(Msg);
+                    PrivateMessageReceivedEvent privateMessage = new PrivateMessageReceivedEvent(
+                            UIDMap.fromQQUIN(Msg.getSender().getId()).orElseThrow(IllegalArgumentException::new).getUserID(),
+                            MessageUtil.deserializeChain(Msg.getMessageChain()),
+                            "QQ",
+                            Msg.getMessageId()
+                    );
+                    EventBus.getDefault().post(privateMessage);
+                    if (Config.getInst().displayMessage) {
+                        Core.getLogger().info("[MiraiAdapter] Contact:{} Message:{}",
+                                Msg.getSender().getId(),
+                                privateMessage.getMessage());
+                    }
+                });
                 break;
         }
     }
