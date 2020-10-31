@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
@@ -30,8 +29,8 @@ public class GroupQuoteMessage extends Packet {
         return this;
     }
 
-    public GroupMessage.Resp asResponse() {
-        return Core.getGson().fromJson(getRawResponse(), GroupMessage.Resp.class);
+    public GroupMessages.Resp asResponse() {
+        return gson.fromJson(getRawResponse(), GroupMessages.Resp.class);
     }
 
     @Override

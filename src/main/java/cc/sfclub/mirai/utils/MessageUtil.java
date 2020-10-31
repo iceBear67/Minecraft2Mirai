@@ -2,18 +2,21 @@ package cc.sfclub.mirai.utils;
 
 import cc.sfclub.catcode.CatCodeHelper;
 import cc.sfclub.core.Core;
-import cc.sfclub.mirai.misc.UIDMap;
+import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.At;
 import cc.sfclub.mirai.packets.received.message.types.AtAll;
 import cc.sfclub.mirai.packets.received.message.types.Image;
 import cc.sfclub.mirai.packets.received.message.types.Plain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
 public class MessageUtil {
+    private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
     public static boolean isMiraiEvent(String type) {
         if (type.endsWith("Event")) return true;
         if (type.startsWith("BotOfflineEvent")) return true;
@@ -34,7 +37,8 @@ public class MessageUtil {
             case "Source":
                 return "";//We don't need it in catcodes.
             case "At":
-                builder.append("[At:").append(UIDMap.fromQQUIN(((At) message).getTarget()).orElseThrow(NullPointerException::new).getQQUIN()).append(']');
+                long qquin = ((At) message).getTarget();
+                builder.append("[At:").append(Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(qquin)).getUniqueID()).append(']');
                 return builder.toString();
             case "AtAll":
                 return "[AtAll]";
@@ -46,7 +50,7 @@ public class MessageUtil {
                 return ((Plain) message).getText();
         }
         if (Core.get().config().isDebug()) {
-            Core.getLogger().warn("[MiraiAdapter] Unsupported message: {}", message.getType());
+            logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());
         }
         return "";
     }
@@ -73,13 +77,13 @@ public class MessageUtil {
         switch (args[0]) {
             case "At":
                 String userId = args[1];
-                return At.builder().target(UIDMap.fromUUID(userId).orElseThrow(NullPointerException::new).getQQUIN()).build();
+                return At.builder().target(Long.parseLong(Core.get().userManager().byUUID(userId).getPlatformId())).build();
             case "Plain":
                 return Plain.builder().text(args[1]).build();
             case "Image":
                 return Image.builder().url(new String(Base64.getUrlDecoder().decode(args[1]))).build();
         }
-        Core.getLogger().warn("Unsupported type: {}", args[0]);
+        logger.warn("Unsupported type: {}", args[0]);
         return Plain.builder().text(catcode).build();
     }
 

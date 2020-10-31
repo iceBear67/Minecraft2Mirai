@@ -1,6 +1,7 @@
 package cc.sfclub.mirai;
 
 import cc.sfclub.core.Core;
+import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -8,18 +9,24 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class Packet {
+    protected static final Gson gson = new Gson();
+    protected static final Logger logger = LoggerFactory.getLogger("Packets");
     @Getter
     private String rawResponse;
     private Result result;
-    public Result asResult(){
+
+    public Result asResult() {
         return result;
     }
-    public Request buildRequest(){
-        String packet= Core.getGson().toJson(this);
+
+    public Request buildRequest() {
+        String packet = gson.toJson(this);
         if (debugPacketContent() && Core.get().config().isDebug())
-            Core.getLogger().info("[MiraiAdapter] new packet({}): {}", this.getClass().getSimpleName(), packet);
+            logger.info("[MiraiAdapter] new packet({}): {}", this.getClass().getSimpleName(), packet);
         Request.Builder builder=new Request.Builder().url(Config.getInst().baseUrl+getTargetedPath());
         if(getMethod()==HttpMethod.GET){
             builder.get();
@@ -37,19 +44,19 @@ public abstract class Packet {
         rawResponse = response.body().string();
         if (!rawResponse.startsWith("[")) {
             if (response.code() != 200) {
-                Core.getLogger().info("Mirai-API-Http return an {}", response.code());
-                Core.getLogger().info("Response: ", response);
+                logger.info("Mirai-API-Http return an {}", response.code());
+                logger.info("Response: ", response);
                 result = Result.HTTP_ERROR;
                 return this;
             }
             try {
-                result = Core.getGson().fromJson(rawResponse, Status.class).asResult();
+                result = gson.fromJson(rawResponse, Status.class).asResult();
             } catch (JsonSyntaxException e) {
-                Core.getLogger().error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
-                Core.getLogger().error("Request:", Core.getGson().toJson(this));
+                logger.error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
+                logger.error("Request:", gson.toJson(this));
             }
             if (result != Result.SUCCESS) {
-                Core.getLogger().warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
+                logger.warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
             }
         }
         return this;
@@ -96,7 +103,7 @@ public abstract class Packet {
                     case 400:
                         return Result.UNKNOWN;
                     default:
-                        Core.getLogger().warn("[MiraiAdapter] INvaild status code: {}",code);
+                        logger.warn("[MiraiAdapter] INvaild status code: {}", code);
                         return Result.UNKNOWN;
                 }
             }

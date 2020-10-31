@@ -1,11 +1,10 @@
 package cc.sfclub.mirai;
 
-import cc.sfclub.util.common.JsonConfig;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Config extends JsonConfig {
+public class Config {
     @Getter
     @Setter(AccessLevel.PROTECTED)
     private static Config inst;
@@ -14,9 +13,8 @@ public class Config extends JsonConfig {
     public String authKey = "AuthKey_HERE";
     public boolean displayMessage = false;
     public final boolean autoCreateAccount = true;
-    public String sharedDir = "/tmp/"; //for Image storage and interaction with polarCore
+    public boolean autoAcceptFriendRequest = true;
+    public boolean autoAcceptGroupRequest = true;
 
-    public Config(String rootDir) {
-        super(rootDir);
-    }
+    public String sharedDir = "/tmp/"; //for Image storage and interaction with polarCore
 }

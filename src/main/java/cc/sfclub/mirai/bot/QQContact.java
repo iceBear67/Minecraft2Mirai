@@ -2,7 +2,6 @@ package cc.sfclub.mirai.bot;
 
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Cred;
-import cc.sfclub.mirai.misc.UIDMap;
 import cc.sfclub.mirai.packets.FriendMessage;
 import cc.sfclub.mirai.packets.FriendQuoteMessage;
 import cc.sfclub.mirai.packets.TempMessage;
@@ -11,7 +10,6 @@ import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.transform.Contact;
 import cc.sfclub.user.User;
 import lombok.Getter;
-import org.nutz.dao.Cnd;
 
 public class QQContact extends Contact {
     private String nick;
@@ -40,8 +38,7 @@ public class QQContact extends Contact {
 
     @Override
     public User asPermObj() {
-        String userID = UIDMap.fromQQUIN(this.getID()).orElseThrow(() -> new IllegalArgumentException("Unknown error")).getUserID();
-        return Core.get().ORM().fetch(User.class, Cnd.where("UniqueID", "=", userID));
+        return Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(getID()));
     }
 
     @Override

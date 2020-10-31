@@ -1,7 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
-import cc.sfclub.mirai.Config;
 import cc.sfclub.mirai.Packet;
 import lombok.Builder;
 
@@ -29,7 +27,7 @@ public class Auth extends Packet {
         return this.getClass().cast(super.send());
     }
     public Optional<String> asSession(){
-        Response response=Core.getGson().fromJson(getRawResponse(),Response.class);
+        Response response = gson.fromJson(getRawResponse(), Response.class);
         return Optional.ofNullable(response.session);
     }
     private class Response{
