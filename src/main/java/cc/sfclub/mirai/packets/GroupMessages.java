@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
@@ -8,7 +7,7 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public class GroupMessage extends Packet {
+public class GroupMessages extends Packet {
     private String sessionKey;
     private long target;
     private List<MiraiTypeMessage> messageChain;
@@ -24,13 +23,13 @@ public class GroupMessage extends Packet {
     }
 
     @Override
-    public GroupMessage send() {
+    public GroupMessages send() {
         super.send();
         return this;
     }
 
     public Resp asResponse() {
-        return Core.getGson().fromJson(getRawResponse(), Resp.class);
+        return gson.fromJson(getRawResponse(), Resp.class);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
@@ -29,7 +28,7 @@ public class GroupMemberInfo extends Packet {
     }
 
     public Resp asInfo() {
-        return Core.getGson().fromJson(getRawResponse(), Resp.class);
+        return gson.fromJson(getRawResponse(), Resp.class);
     }
 
     public class Resp {

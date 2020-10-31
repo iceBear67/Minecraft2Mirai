@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.packets.received.contact.MiraiContact;
 import com.google.gson.JsonParser;
@@ -32,7 +31,7 @@ public class FriendList extends Packet {
         List<MiraiContact> contacts = new ArrayList<>();
         JsonParser.parseString(getRawResponse())
                 .getAsJsonArray()
-                .forEach(j -> contacts.add(Core.getGson().fromJson(j, MiraiContact.class)));
+                .forEach(j -> contacts.add(gson.fromJson(j, MiraiContact.class)));
         return contacts;
     }
 }

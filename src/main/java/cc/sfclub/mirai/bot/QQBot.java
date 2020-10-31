@@ -1,6 +1,6 @@
 package cc.sfclub.mirai.bot;
 
-import cc.sfclub.mirai.misc.UIDMap;
+import cc.sfclub.core.Core;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
 
@@ -10,13 +10,14 @@ import java.util.Optional;
 
 public class QQBot extends Bot {
     public static Map<Long, Long> contactsAndGroup = new HashMap<>();
+    public static final String PLATFORM_NAME = "QQ";
     @Override
     public String getName() {
-        return "QQ";
+        return PLATFORM_NAME;
     }
 
     @Override
     public Optional<Contact> asContact(String userId) {
-        return getContact(UIDMap.fromUUID(userId).orElseThrow(NullPointerException::new).getQQUIN());
+        return getContact(Long.parseLong(Core.get().userManager().byUUID(userId).getPlatformId()));
     }
 }

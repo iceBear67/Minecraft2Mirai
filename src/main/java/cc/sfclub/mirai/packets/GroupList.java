@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.packets.received.sender.MiraiGroup;
 import com.google.gson.JsonParser;
@@ -34,7 +33,7 @@ public class GroupList extends Packet {
         JsonParser.parseString(getRawResponse())
                 .getAsJsonArray()
                 .forEach(j -> {
-                    groups.add(Core.getGson().fromJson(j, MiraiGroup.class));
+                    groups.add(gson.fromJson(j, MiraiGroup.class));
                 });
         return groups;
     }

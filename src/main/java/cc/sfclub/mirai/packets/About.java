@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Packet;
 import lombok.Builder;
 
@@ -13,7 +12,7 @@ public class About extends Packet {
     @Override
     public About send(){
         Result result=super.send().asResult();
-        Core.getLogger().info(getRawResponse());
+        logger.info(getRawResponse());
         return this;
     }
     @Override

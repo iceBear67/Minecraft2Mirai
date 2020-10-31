@@ -2,7 +2,7 @@ package cc.sfclub.mirai.bot;
 
 import cc.sfclub.mirai.Cred;
 import cc.sfclub.mirai.packets.GroupMemberInfo;
-import cc.sfclub.mirai.packets.GroupMessage;
+import cc.sfclub.mirai.packets.GroupMessages;
 import cc.sfclub.mirai.packets.GroupQuoteMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.transform.ChatGroup;
@@ -60,7 +60,7 @@ public class QQGroup extends ChatGroup {
 
     @Override
     public void sendMessage(String s) {
-        GroupMessage.builder()
+        GroupMessages.builder()
                 .sessionKey(Cred.sessionKey)
                 .target(this.getID())
                 .messageChain(MessageUtil.deserializeCatCodes(s))
