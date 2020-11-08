@@ -4,6 +4,7 @@ import cc.sfclub.mirai.packets.received.contact.MiraiContact;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.Source;
+import cc.sfclub.mirai.utils.MessageUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -30,15 +31,7 @@ public class MiraiContactMessage extends MiraiMessage {
         JsonElement element = JsonParser.parseString(json);
         if (!element.getAsJsonObject().has("messageChain")) return Optional.empty();
         JsonArray messageChain = element.getAsJsonObject().get("messageChain").getAsJsonArray();
-        messageChain.forEach(j -> {
-            String type = j.getAsJsonObject().get("type").getAsString();
-            try {
-                Class clazz = Class.forName("cc.sfclub.mirai.packets.received.message.types." + type);
-                origin.messageChain.add((MiraiTypeMessage) gson.fromJson(j, clazz));
-            } catch (ClassNotFoundException e) {
-                logger.error("Unsupported type:{}", type);
-            }
-        });
+        origin.messageChain = MessageUtil.deserializeJsonMessageChain(messageChain);
         return Optional.of(origin);
     }
 
