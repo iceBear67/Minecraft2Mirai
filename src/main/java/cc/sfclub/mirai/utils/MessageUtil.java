@@ -4,10 +4,7 @@ import cc.sfclub.catcode.CatCodeHelper;
 import cc.sfclub.core.Core;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
-import cc.sfclub.mirai.packets.received.message.types.At;
-import cc.sfclub.mirai.packets.received.message.types.AtAll;
-import cc.sfclub.mirai.packets.received.message.types.Image;
-import cc.sfclub.mirai.packets.received.message.types.Plain;
+import cc.sfclub.mirai.packets.received.message.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +45,9 @@ public class MessageUtil {
                 return builder.toString();
             case "Plain":
                 return ((Plain) message).getText();
+            case "Quote":
+                Quote quote = (Quote) message;
+                return deserializeChain(quote.getOrigin());
         }
         if (Core.get().config().isDebug()) {
             logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());

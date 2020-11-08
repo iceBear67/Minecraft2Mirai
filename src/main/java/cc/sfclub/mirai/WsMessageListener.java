@@ -33,6 +33,7 @@ public class WsMessageListener extends WebSocketListener {
     public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
         super.onFailure(webSocket, t, response);
         logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
+        t.printStackTrace();
     }
 
     @Override
