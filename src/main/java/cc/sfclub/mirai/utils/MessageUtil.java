@@ -5,14 +5,18 @@ import cc.sfclub.core.Core;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MessageUtil {
+    private transient static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
     public static boolean isMiraiEvent(String type) {
         if (type.endsWith("Event")) return true;
@@ -45,9 +49,9 @@ public class MessageUtil {
                 return builder.toString();
             case "Plain":
                 return ((Plain) message).getText();
-            case "Quote":
+            /*case "Quote":
                 Quote quote = (Quote) message;
-                return deserializeChain(quote.getOrigin());
+                return deserializeChain(quote.getOrigin());*/
         }
         if (Core.get().config().isDebug()) {
             logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());
@@ -102,5 +106,31 @@ public class MessageUtil {
             messageChain.add(m);
             return this;
         }
+    }
+
+    public static List<MiraiTypeMessage> deserializeJsonMessageChain(JsonArray messageChain) {
+        List<MiraiTypeMessage> result = new LinkedList<>();
+        messageChain.forEach(j -> {
+            String type = j.getAsJsonObject().get("type").getAsString();
+            try {
+                Class clazz = Class.forName("cc.sfclub.mirai.packets.received.message.types." + type);
+                MiraiTypeMessage msg = (MiraiTypeMessage) gson.fromJson(j, clazz);
+                if (msg instanceof Quote) {
+                    Quote quote = (Quote) msg;
+                    List<MiraiTypeMessage> sub = deserializeJsonMessageChain(j.getAsJsonObject().getAsJsonArray("origin"));
+                    result.add(Quote.builder().groupId(quote.getGroupId())
+                            .id(quote.getId())
+                            .origin(sub)
+                            .senderId(quote.getSenderId())
+                            .targetId(quote.getTargetId())
+                            .build());
+                } else {
+                    result.add(msg);
+                }
+            } catch (ClassNotFoundException e) {
+                logger.error("Unsupported type:{}", type);
+            }
+        });
+        return result;
     }
 }
