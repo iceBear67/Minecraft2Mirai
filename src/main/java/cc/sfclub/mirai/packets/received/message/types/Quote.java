@@ -1,6 +1,5 @@
 package cc.sfclub.mirai.packets.received.message.types;
 
-import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,5 +13,5 @@ public class Quote extends MiraiTypeMessage {
     private long groupId;
     private long senderId;
     private long targetId;
-    private List<MiraiMessage> origin;
+    private List<MiraiTypeMessage> origin;
 }
