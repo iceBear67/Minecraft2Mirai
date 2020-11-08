@@ -5,6 +5,7 @@ import cc.sfclub.core.Core;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.*;
+import cc.sfclub.user.User;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
@@ -39,7 +40,11 @@ public class MessageUtil {
                 return "";//We don't need it in catcodes.
             case "At":
                 long qquin = ((At) message).getTarget();
-                builder.append("[At:").append(Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(qquin)).getUniqueID()).append(']');
+                User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(qquin));
+                if (u == null) {
+                    u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(qquin));
+                }
+                builder.append("[At:").append(u.getUniqueID()).append(']');
                 return builder.toString();
             case "AtAll":
                 return "[AtAll]";
