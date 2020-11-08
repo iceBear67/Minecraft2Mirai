@@ -49,9 +49,10 @@ public class MessageUtil {
                 return builder.toString();
             case "Plain":
                 return ((Plain) message).getText();
-            /*case "Quote":
-                Quote quote = (Quote) message;
+            case "Quote":
+                /*Quote quote = (Quote) message;
                 return deserializeChain(quote.getOrigin());*/
+                return "";
         }
         if (Core.get().config().isDebug()) {
             logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());
