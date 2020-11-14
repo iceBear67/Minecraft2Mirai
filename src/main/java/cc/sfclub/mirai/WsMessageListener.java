@@ -79,7 +79,7 @@ public class WsMessageListener extends WebSocketListener {
                             groupMessage.getMessage());
                 }
                 break;
-            case "PrivateMessage":
+            case "FriendMessage":
             case "TempMessage":
                 MiraiContactMessage.parseJson(text).ifPresent(Msg -> {
                     AdapterMain.getMiraiEventBus().post(Msg);
@@ -99,7 +99,7 @@ public class WsMessageListener extends WebSocketListener {
                     Event.postEvent(privateMessage);
                     if (Config.getInst().displayMessage) {
                         logger.info("[MiraiAdapter] [CONTACT] [{}({})] ->{}",
-                                Msg.getSender().getNickname(),
+                                Msg.getSender().getRemark(),
                                 Msg.getSender().getId(),
                                 privateMessage.getMessage());
                     }
