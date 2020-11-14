@@ -1,6 +1,6 @@
 package cc.sfclub.mirai.events.mirai.friend;
 
-import cc.sfclub.mirai.Config;
+import cc.sfclub.mirai.Cred;
 import cc.sfclub.mirai.packets.DealFriendRequest;
 import lombok.Getter;
 
@@ -22,7 +22,7 @@ public class NewFriendRequestEvent extends FriendEvent {
                 .groupId(groupId)
                 .operate(operate)
                 .message(message)
-                .sessionKey(Config.getInst().authKey)
+                .sessionKey(Cred.sessionKey)
                 .build();
 
     }
