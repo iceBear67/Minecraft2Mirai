@@ -15,15 +15,15 @@ public class NewFriendRequestEvent extends FriendEvent {
     private String nick;
     private String message;
 
-    public DealFriendRequest deal(int operate, String message) {
-        return DealFriendRequest.builder()
+    public void deal(int operate, String message) {
+        DealFriendRequest.builder()
                 .eventId(eventId)
                 .fromId(fromId)
                 .groupId(groupId)
                 .operate(operate)
                 .message(message)
                 .sessionKey(Cred.sessionKey)
-                .build();
+                .build().send();
 
     }
 }
