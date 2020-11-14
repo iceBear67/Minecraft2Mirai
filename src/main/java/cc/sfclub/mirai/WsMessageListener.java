@@ -53,6 +53,9 @@ public class WsMessageListener extends WebSocketListener {
                 AdapterMain.getMiraiEventBus().post(miraiGroupMessage);
                 User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 if (u == null) {
+                    if (!Config.getInst().autoCreateAccount) {
+                        return;
+                    }
                     u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 }
                 GroupMessage groupMessage = new GroupMessage(
@@ -74,6 +77,9 @@ public class WsMessageListener extends WebSocketListener {
                     AdapterMain.getMiraiEventBus().post(Msg);
                     User u3 = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
                     if (u3 == null) {
+                        if (!Config.getInst().autoCreateAccount) {
+                            return;
+                        }
                         u3 = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
                     }
                     PrivateMessage privateMessage = new PrivateMessage(

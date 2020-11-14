@@ -12,7 +12,10 @@ public class Config {
     public long QQ = 0L;
     public String authKey = "AuthKey_HERE";
     public boolean displayMessage = false;
-    public final boolean autoCreateAccount = true;
+    /**
+     * 如果设置为false,则拒收未注册用户的信息。
+     */
+    public boolean autoCreateAccount = true;
     public boolean autoAcceptFriendRequest = true;
     public boolean autoAcceptGroupRequest = true;
 
