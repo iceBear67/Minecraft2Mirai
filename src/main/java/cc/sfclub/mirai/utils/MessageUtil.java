@@ -58,6 +58,8 @@ public class MessageUtil {
                 /*Quote quote = (Quote) message;
                 return deserializeChain(quote.getOrigin());*/
                 return "";
+            case "Face":
+                return "";
         }
         if (Core.get().config().isDebug()) {
             logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());
