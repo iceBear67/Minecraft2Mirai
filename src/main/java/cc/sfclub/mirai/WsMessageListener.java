@@ -94,9 +94,9 @@ public class WsMessageListener extends WebSocketListener {
                     );
                     Event.postEvent(privateMessage);
                     if (Config.getInst().displayMessage) {
-                        logger.info("[MiraiAdapter] Contact:{}/{} Message:{}",
-                                Msg.getSender().getId(),
+                        logger.info("[MiraiAdapter] Contact: {} ({}) Msg:{}",
                                 Msg.getSender().getNickname(),
+                                Msg.getSender().getId(),
                                 privateMessage.getMessage());
                     }
                 });
