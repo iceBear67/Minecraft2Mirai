@@ -72,7 +72,11 @@ public class WsMessageListener extends WebSocketListener {
 
                 Event.postEvent(groupMessage);
                 if (Config.getInst().displayMessage) {
-                    logger.info("[MiraiAdapter] Group: {} ({}) Msg:{}", miraiGroupMessage.getSender().getGroup().getName(), groupMessage.getGroupId(), groupMessage.getMessage());
+                    logger.info("[MiraiAdapter] [{}({})] {} -> {}",
+                            miraiGroupMessage.getSender().getGroup().getName(),
+                            groupMessage.getGroupId(),
+                            miraiGroupMessage.getSender().getMemberName(),
+                            groupMessage.getMessage());
                 }
                 break;
             case "PrivateMessage":
@@ -94,7 +98,7 @@ public class WsMessageListener extends WebSocketListener {
                     );
                     Event.postEvent(privateMessage);
                     if (Config.getInst().displayMessage) {
-                        logger.info("[MiraiAdapter] Contact: {} ({}) Msg:{}",
+                        logger.info("[MiraiAdapter] [CONTACT] [{}({})] ->{}",
                                 Msg.getSender().getNickname(),
                                 Msg.getSender().getId(),
                                 privateMessage.getMessage());
