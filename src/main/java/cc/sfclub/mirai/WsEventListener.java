@@ -26,6 +26,16 @@ public class WsEventListener extends WebSocketListener {
     }
 
     @Override
+    public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+        super.onClosing(webSocket, code, reason);
+        if (reason.equals("onDisable")) {
+            logger.info("WsEventListener shutting down...");
+            return;
+        }
+        logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
+    }
+
+    @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
         MiraiMessage message = gson.fromJson(text, MiraiMessage.class);

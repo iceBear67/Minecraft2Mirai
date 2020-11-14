@@ -39,6 +39,10 @@ public class WsMessageListener extends WebSocketListener {
     @Override
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosing(webSocket, code, reason);
+        if (reason.equals("onDisable")) {
+            logger.info("WsMessageListener shutting down...");
+            return;
+        }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
     }
 
