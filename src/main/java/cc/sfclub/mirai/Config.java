@@ -18,6 +18,4 @@ public class Config {
     public boolean autoCreateAccount = true;
     public boolean autoAcceptFriendRequest = true;
     public boolean autoAcceptGroupRequest = true;
-
-    public String sharedDir = "/tmp/"; //for Image storage and interaction with polarCore
 }
