@@ -94,7 +94,8 @@ public class AdapterMain extends Plugin {
                 });
         if (Cred.sessionKey == null)
             getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
-        if (Config.getInst().autoAcceptGroupRequest) MiraiEventBus.register(new AutoAcceptInvite());
+        if (Config.getInst().autoAcceptGroupRequest || Config.getInst().autoAcceptFriendRequest)
+            MiraiEventBus.register(new AutoAcceptInvite());
         registerCommand(
                 LiteralArgumentBuilder.<Source>literal("mirai")
                         .requires(source -> {
