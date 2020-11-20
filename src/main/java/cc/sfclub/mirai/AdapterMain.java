@@ -94,7 +94,6 @@ public class AdapterMain extends Plugin {
                 });
         if (Cred.sessionKey == null)
             getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
-        if (Config.getInst().autoAcceptFriendRequest) MiraiEventBus.register(new AutoAcceptFriendReq());
         if (Config.getInst().autoAcceptGroupRequest) MiraiEventBus.register(new AutoAcceptInvite());
         registerCommand(
                 LiteralArgumentBuilder.<Source>literal("mirai")
@@ -129,7 +128,7 @@ public class AdapterMain extends Plugin {
         );
     }
 
-    public void refreshContacts() {
+    public synchronized void refreshContacts() {
         QQBot bot = (QQBot) Core.get().bot("QQ").get();
         GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
             Set<Contact> contactSet = new HashSet<>();
