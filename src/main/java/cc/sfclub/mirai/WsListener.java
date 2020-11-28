@@ -34,6 +34,7 @@ public class WsListener extends WebSocketListener {
         super.onFailure(webSocket, t, response);
         logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
         t.printStackTrace();
+        AdapterMain.get(AdapterMain.class).authed = false;
         AdapterMain.get(AdapterMain.class).requestReconnect();
     }
 
