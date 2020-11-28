@@ -8,6 +8,7 @@ import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.bot.QQContact;
 import cc.sfclub.mirai.bot.QQGroup;
 import cc.sfclub.mirai.packets.*;
+import cc.sfclub.mirai.packets.received.sender.MiraiGroup;
 import cc.sfclub.plugin.Plugin;
 import cc.sfclub.transform.Bot;
 import cc.sfclub.transform.Contact;
@@ -131,21 +132,7 @@ public class AdapterMain extends Plugin {
 
     public synchronized void refreshContacts() {
         QQBot bot = (QQBot) Core.get().bot("QQ").get();
-        GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(g -> {
-            Set<Contact> contactSet = new HashSet<>();
-            //load group members
-            GroupMemberList.builder().sessionKey(Cred.sessionKey)
-                    .target(g.getId())
-                    .build().send().asList().forEach(ms -> {
-                QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
-                contactSet.add(contact);
-                QQBot.contactsAndGroup.put(contact.getID(), g.getId());
-                bot.addContact(contact, true);
-            });
-
-            QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
-            bot.addGroup(group, true);
-        });
+        GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(this::refreshGroup);
         getLogger().info("[MiraiAdapter] Updating friendList");
         FriendList.builder().sessionKey(Cred.sessionKey).build()
                 .send().asGroups().forEach(contact -> {
@@ -153,6 +140,22 @@ public class AdapterMain extends Plugin {
         });
     }
 
+    public synchronized void refreshGroup(MiraiGroup g) {
+        QQBot bot = (QQBot) Core.get().bot("QQ").get();
+        Set<Contact> contactSet = new HashSet<>();
+        //load group members
+        GroupMemberList.builder().sessionKey(Cred.sessionKey)
+                .target(g.getId())
+                .build().send().asList().forEach(ms -> {
+            QQContact contact = new QQContact(ms.getId(), ms.getMemberName(), ms.getPermission());
+            contactSet.add(contact);
+            QQBot.contactsAndGroup.put(contact.getID(), g.getId());
+            bot.addContact(contact, true);
+        });
+
+        QQGroup group = new QQGroup(g.getId(), contactSet, g.getName());
+        bot.addGroup(group, true);
+    }
 
     @Override
     public void onEnable() {
