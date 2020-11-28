@@ -43,6 +43,7 @@ public class AdapterMain extends Plugin {
     @Getter
     private ExecutorService threadPool = Executors.newFixedThreadPool(4);
     protected int reconnectCounter = 0;
+    protected boolean authed = false;
 
     @Subscribe
     @SuppressWarnings("all")
@@ -60,6 +61,7 @@ public class AdapterMain extends Plugin {
                 .asSession()
                 .ifPresent(s -> {
                     getLogger().info("[MiraiAdapter] Logged in!");
+                    authed = true;
                     Cred.sessionKey = s;
                     String response = Verify.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
@@ -158,14 +160,16 @@ public class AdapterMain extends Plugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("Logging out..");
-        getLogger().info("Releasing session: {}", Release.builder()
-                .qq(Config.getInst().QQ)
-                .sessionKey(Cred.sessionKey)
-                .build()
-                .send()
-                .asMessage().orElse("Unknown Error")
-        );
+        if (authed) {
+            getLogger().info("Logging out..");
+            getLogger().info("Releasing session: {}", Release.builder()
+                    .qq(Config.getInst().QQ)
+                    .sessionKey(Cred.sessionKey)
+                    .build()
+                    .send()
+                    .asMessage().orElse("Unknown Error")
+            );
+        }
         if (wsMessageListener != null) {
             wsMessageListener.close(1000, "onDisable");
         }
@@ -204,6 +208,7 @@ public class AdapterMain extends Plugin {
         auth.send()
                 .asSession()
                 .ifPresent(s -> {
+                    authed = true;
                     getLogger().info("[MiraiAdapter] Logged in!");
                     Cred.sessionKey = s;
                     String response = Verify.builder().qq(Config.getInst().QQ)
