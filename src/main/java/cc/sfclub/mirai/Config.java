@@ -12,6 +12,8 @@ public class Config {
     public long QQ = 3325273573L;
     public String authKey = "AuthKey_HERE";
     public boolean displayMessage = false;
+    public int reconnectLimit = 10;
+    public int reconnectTimeWait = 3000;
     /**
      * 如果设置为false,则拒收未注册用户的信息。
      */

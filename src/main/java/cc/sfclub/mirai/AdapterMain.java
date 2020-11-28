@@ -39,11 +39,10 @@ public class AdapterMain extends Plugin {
     @Getter
     private static final EventBus MiraiEventBus = EventBus.builder().sendNoSubscriberEvent(false).logNoSubscriberMessages(false).build();
     @Getter
-    private WebSocket wsEventListener;
-    @Getter
     private WebSocket wsMessageListener;
     @Getter
     private ExecutorService threadPool = Executors.newFixedThreadPool(4);
+    protected int reconnectCounter = 0;
 
     @Subscribe
     @SuppressWarnings("all")
@@ -86,12 +85,7 @@ public class AdapterMain extends Plugin {
                             .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
                             .build();
                     getLogger().info("[MiraiAdapter] Connecting to {}", Config.getInst().baseUrl.replaceAll("http", "ws"));
-                    wsMessageListener = httpClient.newWebSocket(request, new WsMessageListener());
-                    Request _request = new Request.Builder()
-                            .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("event?sessionKey=").concat(Cred.sessionKey))
-                            .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
-                            .build();
-                    wsEventListener = httpClient.newWebSocket(_request, new WsEventListener());
+                    wsMessageListener = httpClient.newWebSocket(request, new WsListener());
                 });
         if (Cred.sessionKey == null)
             getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
@@ -172,12 +166,52 @@ public class AdapterMain extends Plugin {
                 .send()
                 .asMessage().orElse("Unknown Error")
         );
-        if (wsEventListener != null) {
-            wsEventListener.close(1000, "onDisable");
-        }
         if (wsMessageListener != null) {
             wsMessageListener.close(1000, "onDisable");
         }
         threadPool.shutdownNow();
+    }
+
+    protected void requestReconnect() {
+        if (++reconnectCounter >= Config.getInst().reconnectLimit) {
+            getLogger().error("Gave up to connect Mirai!!");
+            return;
+        }
+        wsMessageListener.cancel();
+        try {
+            getLogger().info("[Reconnecter] Waiting to reconnect Mirai...");
+            Thread.sleep(Config.getInst().reconnectTimeWait);
+            reAuth();
+        } catch (Exception e) {
+            if (!(e instanceof InterruptedException)) {
+                reconnectCounter--;
+                requestReconnect();
+                return;
+            }
+        }
+        getLogger().info("[Reconnecter] Re-connecting to Mirai");
+        Request request = new Request.Builder()
+                .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
+                .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
+                .build();
+        wsMessageListener = httpClient.newWebSocket(request, new WsListener());
+    }
+
+    protected synchronized void reAuth() {
+        Auth auth = Auth.builder()
+                .authKey(Config.getInst().authKey)
+                .build();
+        auth.send()
+                .asSession()
+                .ifPresent(s -> {
+                    getLogger().info("[MiraiAdapter] Logged in!");
+                    Cred.sessionKey = s;
+                    String response = Verify.builder().qq(Config.getInst().QQ)
+                            .sessionKey(Cred.sessionKey)
+                            .build()
+                            .send()
+                            .getRawResponse();
+                    getLogger().info("[MiraiAdapter] Try verify: {}", response);
+                });
     }
 }
