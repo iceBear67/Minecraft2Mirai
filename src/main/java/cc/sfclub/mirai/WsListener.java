@@ -20,12 +20,12 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WsMessageListener extends WebSocketListener {
+public class WsListener extends WebSocketListener {
     private static final Gson gson = new Gson();
-    private static final Logger logger = LoggerFactory.getLogger(WsEventListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(WsListener.class);
 
-    public WsMessageListener() {
-        logger.info("WsMessageListener Started!");
+    public WsListener() {
+        logger.info("WsListener Started!");
     }
 
     @SneakyThrows
@@ -34,23 +34,34 @@ public class WsMessageListener extends WebSocketListener {
         super.onFailure(webSocket, t, response);
         logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
         t.printStackTrace();
+        AdapterMain.get(AdapterMain.class).requestReconnect();
     }
 
     @Override
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosing(webSocket, code, reason);
         if (reason.equals("onDisable")) {
-            logger.info("WsMessageListener shutting down...");
+            logger.info("WsListener shutting down...");
             return;
         }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
     }
 
     @Override
+    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+        super.onOpen(webSocket, response);
+        AdapterMain.get(AdapterMain.class).reconnectCounter = 0;
+        logger.info("WsListener Connected!");
+    }
+
+    @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
         MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
-        if (MessageUtil.isMiraiEvent(message.getType())) return;
+        if (MessageUtil.isMiraiEvent(message.getType())) {
+            onELMessage(webSocket, text);
+            return;
+        }
         switch (message.getType()) {
             case "GroupMessage":
                 MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text).orElseThrow(IllegalArgumentException::new);
@@ -114,6 +125,33 @@ public class WsMessageListener extends WebSocketListener {
                     }
                 });
                 break;
+        }
+    }
+
+    public void onELMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+        MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
+        if (!MessageUtil.isMiraiEvent(message.getType())) return;
+        String type = message.getType();
+        try {
+            Class<?> clazz = null;
+            if (type.contains("Friend")) {
+                clazz = Class.forName("cc.sfclub.mirai.events.mirai.friend." + type);
+            } else if (type.startsWith("Group")) {
+                clazz = Class.forName("cc.sfclub.mirai.events.mirai.group." + type);
+            } else if (type.startsWith("Member")) {
+                clazz = Class.forName("cc.sfclub.mirai.events.mirai.group.member." + type);
+            } else if (type.startsWith("Bot")) {
+                try {
+                    clazz = Class.forName("cc.sfclub.mirai.events.mirai.group.bot." + type);
+                } catch (ClassNotFoundException e) {
+                    clazz = Class.forName("cc.sfclub.mirai.events.mirai.bot." + type);
+                }
+            }
+            if (clazz != null) {
+                AdapterMain.getMiraiEventBus().post(gson.fromJson(text, clazz));
+            }
+        } catch (ClassNotFoundException e) {
+            logger.error("Couldn't find class {} for event!", type, e);
         }
     }
 }
