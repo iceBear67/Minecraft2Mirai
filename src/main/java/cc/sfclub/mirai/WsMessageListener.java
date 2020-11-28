@@ -62,6 +62,15 @@ public class WsMessageListener extends WebSocketListener {
                     }
                     u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 }
+                //checks..
+                synchronized (this) {
+                    QQBot bot = (QQBot) Core.get().bot("QQ").get();
+                    if (bot.getGroup(miraiGroupMessage.getSender().getGroup().getId()).isEmpty()) {
+                        AdapterMain.get(AdapterMain.class).refreshGroup(
+                                miraiGroupMessage.getSender().getGroup()
+                        );
+                    }
+                }
                 GroupMessage groupMessage = new GroupMessage(
                         u.getUniqueID(),
                         MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain()),
