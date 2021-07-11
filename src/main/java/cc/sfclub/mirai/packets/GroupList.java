@@ -1,6 +1,7 @@
 package cc.sfclub.mirai.packets;
 
 import cc.sfclub.mirai.Packet;
+import cc.sfclub.mirai.adapts.SBSpigot;
 import cc.sfclub.mirai.packets.received.sender.MiraiGroup;
 import com.google.gson.JsonParser;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class GroupList extends Packet {
 
     public List<MiraiGroup> asGroups() {
         List<MiraiGroup> groups = new ArrayList<>();
-        JsonParser.parseString(getRawResponse())
+       SBSpigot.JP.parse(getRawResponse())
                 .getAsJsonArray()
                 .forEach(j -> {
                     groups.add(gson.fromJson(j, MiraiGroup.class));

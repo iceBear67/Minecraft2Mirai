@@ -1,23 +1,19 @@
 package cc.sfclub.mirai;
 
-import cc.sfclub.command.Source;
-import cc.sfclub.core.Core;
-import cc.sfclub.events.MessageEvent;
-import cc.sfclub.events.server.ServerStartedEvent;
+import cc.sfclub.mirai.adapts.*;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.bot.QQContact;
 import cc.sfclub.mirai.bot.QQGroup;
 import cc.sfclub.mirai.packets.*;
 import cc.sfclub.mirai.packets.received.sender.MiraiGroup;
-import cc.sfclub.plugin.Plugin;
-import cc.sfclub.transform.Bot;
-import cc.sfclub.transform.Contact;
-import cc.sfclub.user.perm.Perm;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -29,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AdapterMain extends Plugin {
+public class AdapterMain extends JavaPlugin {
     @Getter
     private static final OkHttpClient httpClient = new OkHttpClient.Builder()
             .readTimeout(10, TimeUnit.SECONDS)
@@ -44,14 +40,31 @@ public class AdapterMain extends Plugin {
     private ExecutorService threadPool = Executors.newFixedThreadPool(4);
     protected int reconnectCounter = 0;
     protected boolean authed = false;
+    //Adaptions below..
+    private SimpleConfig<Config> config;
+    @Getter
+    private Bot bot;
+    @Getter
+    private CommandDispatcher<Source> dispatcher = new CommandDispatcher<>();
 
-    @Subscribe
+    public Config getMainConfig(){
+        return config.get();
+    }
     @SuppressWarnings("all")
-    public void onServerStart(ServerStartedEvent e) {
+    public void onServerStart() {
+        BukkitMessageEvent a =new BukkitMessageEvent();
+        this.getServer().getPluginManager().registerEvents(a,this);
+        getMiraiEventBus().register(a);
         getLogger().info("Mirai-Adapter loading");
-        getConfig().saveDefault();
-        getConfig().reloadConfig();
-        Config.setInst((Config) getConfig().get());
+        config=new SimpleConfig<>(this,Config.class);
+        config.saveDefault();
+        config.reloadConfig();
+        Config.setInst(config.get());
+        if (Config.getInst().authKey.equals("AuthKey_HERE")) {
+            this.setEnabled(false);
+            getLogger().warning("Configure your configurations.");
+            return;
+        }
         getLogger().info("Try logging in..");
         //Init database
         Auth auth = Auth.builder()
@@ -68,66 +81,32 @@ public class AdapterMain extends Plugin {
                             .build()
                             .send()
                             .getRawResponse();
-                    getLogger().info("[MiraiAdapter] Try verify: {}", response);
+                    getLogger().info("[MiraiAdapter] Try verify: "+response);
                     //load groups
-                    Core.get().registerBot(new QQBot());
-                    Bot bot = Core.get().bot(QQBot.PLATFORM_NAME).orElseThrow(() -> new IllegalArgumentException("Unknown error"));
+                    //Core.get().registerBot(new QQBot());
+                    //Bot bot = Core.get().bot(QQBot.PLATFORM_NAME).orElseThrow(() -> new IllegalArgumentException("Unknown error"));
+                    bot = new QQBot();
                     refreshContacts();
-                    threadPool.submit(() -> {
-                        try {
-                            Thread.sleep(300 * 1000);
-                        } catch (InterruptedException ignored) {
-
-                        }
-                        if (this.isLoaded())
-                            refreshContacts();
-                    });
+                    Bukkit.getScheduler().runTaskTimerAsynchronously(this,()->{
+                        refreshContacts();
+                    },0L,30*20L);
                     Request request = new Request.Builder()
                             .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
                             .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
                             .build();
-                    getLogger().info("[MiraiAdapter] Connecting to {}", Config.getInst().baseUrl.replaceAll("http", "ws"));
+                    getLogger().info("[MiraiAdapter] Connecting to "+ Config.getInst().baseUrl.replaceAll("http", "ws"));
                     wsMessageListener = httpClient.newWebSocket(request, new WsListener());
                 });
         if (Cred.sessionKey == null)
-            getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
-        if (Config.getInst().autoAcceptGroupRequest || Config.getInst().autoAcceptFriendRequest)
-            MiraiEventBus.register(new AutoAcceptInvite());
-        registerCommand(
+            getLogger().warning("Failed to get session. Response: "+ auth.getRawResponse());
+        dispatcher.register(
                 LiteralArgumentBuilder.<Source>literal("mirai")
-                        .requires(source -> {
-                            return source.getSender().hasPermission(Perm.of("mirai.admin"));
-                        })
-                        .then(LiteralArgumentBuilder.<Source>literal("image")
-                                .executes(c -> {
-                                    c.getSource().getMessageEvent().reply("[Image:" + Base64.getUrlEncoder().encodeToString("https://i.loli.net/2020/07/11/RuBwdh89AezLHUO.jpg".getBytes()) + "]");
-                                    return 0;
-                                })
-                        )
-                        .then(LiteralArgumentBuilder.<Source>literal("at")
-                                .executes(c -> {
-                                    c.getSource().getMessageEvent().reply("[At:" + c.getSource().getSender().getUniqueID() + "]");
-                                            return 0;
-                                        }
-                                ))
-                        .executes(c -> {
-                            MessageEvent m = c.getSource().getMessageEvent();
-                            m.reply(m.getMessageID(), "MiraiAdapter Running!");
-                            return 0;
-                        })
-                        .then(LiteralArgumentBuilder.<Source>literal("pm")
-                                .executes(c -> {
-                                    MessageEvent me = c.getSource().getMessageEvent();
-                                    Core.get().bot("QQ").get().asContact(me.getUserID()).get().sendMessage("HI~");
-                                    return 0;
-                                })
-                        )
-
+                .executes(s->{
+                    s.getSource().getSender().reply("MiraiAdapter on Bukkit Running!");return 0;})
         );
     }
 
     public synchronized void refreshContacts() {
-        QQBot bot = (QQBot) Core.get().bot("QQ").get();
         GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(this::refreshGroup);
         getLogger().info("[MiraiAdapter] Updating friendList");
         FriendList.builder().sessionKey(Cred.sessionKey).build()
@@ -137,7 +116,6 @@ public class AdapterMain extends Plugin {
     }
 
     public synchronized void refreshGroup(MiraiGroup g) {
-        QQBot bot = (QQBot) Core.get().bot("QQ").get();
         Set<Contact> contactSet = new HashSet<>();
         //load group members
         GroupMemberList.builder().sessionKey(Cred.sessionKey)
@@ -155,14 +133,14 @@ public class AdapterMain extends Plugin {
 
     @Override
     public void onEnable() {
-
+        onServerStart();
     }
 
     @Override
     public void onDisable() {
         if (authed) {
             getLogger().info("Logging out..");
-            getLogger().info("Releasing session: {}", Release.builder()
+            getLogger().info("Releasing session: {}"+ Release.builder()
                     .qq(Config.getInst().QQ)
                     .sessionKey(Cred.sessionKey)
                     .build()
@@ -178,7 +156,7 @@ public class AdapterMain extends Plugin {
 
     protected void requestReconnect() {
         if (++reconnectCounter >= Config.getInst().reconnectLimit) {
-            getLogger().error("Gave up to connect Mirai!!");
+            getLogger().warning("Giving up to connect Mirai!!");
             return;
         }
         wsMessageListener.cancel();
@@ -216,7 +194,7 @@ public class AdapterMain extends Plugin {
                             .build()
                             .send()
                             .getRawResponse();
-                    getLogger().info("[MiraiAdapter] Try verify: {}", response);
+                    getLogger().info("[MiraiAdapter] Try verify: "+ response);
                 });
     }
 }

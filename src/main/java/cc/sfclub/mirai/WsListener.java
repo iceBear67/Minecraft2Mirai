@@ -1,15 +1,11 @@
 package cc.sfclub.mirai;
 
-import cc.sfclub.core.Core;
-import cc.sfclub.events.Event;
-import cc.sfclub.events.message.direct.PrivateMessage;
-import cc.sfclub.events.message.group.GroupMessage;
+import cc.sfclub.mirai.adapts.GroupMessage;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.contact.MiraiContactMessage;
 import cc.sfclub.mirai.packets.received.message.group.MiraiGroupMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
-import cc.sfclub.user.User;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import okhttp3.Response;
@@ -34,8 +30,8 @@ public class WsListener extends WebSocketListener {
         super.onFailure(webSocket, t, response);
         logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
         t.printStackTrace();
-        AdapterMain.get(AdapterMain.class).authed = false;
-        AdapterMain.get(AdapterMain.class).requestReconnect();
+        AdapterMain.getPlugin(AdapterMain.class).authed = false;
+        AdapterMain.getPlugin(AdapterMain.class).requestReconnect();
     }
 
     @Override
@@ -51,7 +47,7 @@ public class WsListener extends WebSocketListener {
     @Override
     public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
         super.onOpen(webSocket, response);
-        AdapterMain.get(AdapterMain.class).reconnectCounter = 0;
+        AdapterMain.getPlugin(AdapterMain.class).reconnectCounter = 0;
         logger.info("WsListener Connected!");
     }
 
@@ -67,64 +63,17 @@ public class WsListener extends WebSocketListener {
             case "GroupMessage":
                 MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text).orElseThrow(IllegalArgumentException::new);
                 AdapterMain.getMiraiEventBus().post(miraiGroupMessage);
-                User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
-                if (u == null) {
-                    if (!Config.getInst().autoCreateAccount) {
-                        return;
-                    }
-                    u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
-                }
                 //checks..
                 synchronized (this) {
-                    QQBot bot = (QQBot) Core.get().bot("QQ").get();
-                    if (bot.getGroup(miraiGroupMessage.getSender().getGroup().getId()).isEmpty()) {
-                        AdapterMain.get(AdapterMain.class).refreshGroup(
+                    QQBot bot = (QQBot) AdapterMain.getPlugin(AdapterMain.class).getBot();
+                    if (!bot.getGroup(miraiGroupMessage.getSender().getGroup().getId()).isPresent()) {
+                        AdapterMain.getPlugin(AdapterMain.class).refreshGroup(
                                 miraiGroupMessage.getSender().getGroup()
                         );
                     }
                 }
-                GroupMessage groupMessage = new GroupMessage(
-                        u.getUniqueID(),
-                        MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain()),
-                        miraiGroupMessage.getSender().getGroup().getId(),
-                        QQBot.PLATFORM_NAME,
-                        miraiGroupMessage.getMessageId()
-                );
-
-                Event.postEvent(groupMessage);
-                if (Config.getInst().displayMessage) {
-                    logger.info("[MiraiAdapter] [{}({})] {} -> {}",
-                            miraiGroupMessage.getSender().getGroup().getName(),
-                            groupMessage.getGroupId(),
-                            miraiGroupMessage.getSender().getMemberName(),
-                            groupMessage.getMessage());
-                }
                 break;
             case "FriendMessage":
-            case "TempMessage":
-                MiraiContactMessage.parseJson(text).ifPresent(Msg -> {
-                    AdapterMain.getMiraiEventBus().post(Msg);
-                    User u3 = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
-                    if (u3 == null) {
-                        if (!Config.getInst().autoCreateAccount) {
-                            return;
-                        }
-                        u3 = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
-                    }
-                    PrivateMessage privateMessage = new PrivateMessage(
-                            u3.getUniqueID(),
-                            MessageUtil.deserializeChain(Msg.getMessageChain()),
-                            QQBot.PLATFORM_NAME,
-                            Msg.getMessageId()
-                    );
-                    Event.postEvent(privateMessage);
-                    if (Config.getInst().displayMessage) {
-                        logger.info("[MiraiAdapter] [CONTACT] [{}({})] ->{}",
-                                Msg.getSender().getRemark(),
-                                Msg.getSender().getId(),
-                                privateMessage.getMessage());
-                    }
-                });
                 break;
         }
     }

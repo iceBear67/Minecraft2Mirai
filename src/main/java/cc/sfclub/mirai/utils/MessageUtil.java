@@ -1,11 +1,9 @@
 package cc.sfclub.mirai.utils;
 
-import cc.sfclub.catcode.CatCodeHelper;
-import cc.sfclub.core.Core;
+import cc.sfclub.mirai.adapts.CatCodeHelper;
 import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.*;
-import cc.sfclub.user.User;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
@@ -40,18 +38,12 @@ public class MessageUtil {
                 return "";//We don't need it in catcodes.
             case "At":
                 long qquin = ((At) message).getTarget();
-                User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(qquin));
-                if (u == null) {
-                    u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(qquin));
-                }
-                builder.append("[At:").append(u.getUniqueID()).append(']');
+                builder.append("[At:").append(qquin).append(']');
                 return builder.toString();
             case "AtAll":
                 return "[AtAll]";
             case "Image":
-                Image image = (Image) message;
-                builder.append("[Image:").append(Base64.getUrlEncoder().encodeToString(image.getUrl().getBytes())).append(']');
-                return builder.toString();
+                return "[Image]";
             case "Plain":
                 return ((Plain) message).getText();
             case "Quote":
@@ -60,9 +52,6 @@ public class MessageUtil {
                 return "";
             case "Face":
                 return "";
-        }
-        if (Core.get().config().isDebug()) {
-            logger.warn("[MiraiAdapter] Unsupported message: {}", message.getType());
         }
         return "";
     }
@@ -80,7 +69,7 @@ public class MessageUtil {
             return Plain.builder().text(catcode).build();
         }
         String code = catcode.replaceFirst("\\[", "");
-        code = code.substring(0, code.length() - 1);//去掉最后面那个]
+        code = code.substring(0, code.length() - 1);
         String[] args = code.split(":");
         if (args.length != 2) {
             if ("AtAll".equals(code)) return AtAll.INST;
@@ -89,7 +78,7 @@ public class MessageUtil {
         switch (args[0]) {
             case "At":
                 String userId = args[1];
-                return At.builder().target(Long.parseLong(Core.get().userManager().byUUID(userId).getPlatformId())).build();
+                return At.builder().target(Long.parseLong(userId)).build();
             case "Plain":
                 return Plain.builder().text(args[1]).build();
             case "Image":

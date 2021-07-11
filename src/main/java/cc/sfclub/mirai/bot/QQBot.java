@@ -1,8 +1,7 @@
 package cc.sfclub.mirai.bot;
 
-import cc.sfclub.core.Core;
-import cc.sfclub.transform.Bot;
-import cc.sfclub.transform.Contact;
+import cc.sfclub.mirai.adapts.Bot;
+import cc.sfclub.mirai.adapts.Contact;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +17,6 @@ public class QQBot extends Bot {
 
     @Override
     public Optional<Contact> asContact(String userId) {
-        return getContact(Long.parseLong(Core.get().userManager().byUUID(userId).getPlatformId()));
+        return null;
     }
 }

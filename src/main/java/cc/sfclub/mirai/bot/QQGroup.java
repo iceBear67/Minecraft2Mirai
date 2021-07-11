@@ -1,12 +1,12 @@
 package cc.sfclub.mirai.bot;
 
 import cc.sfclub.mirai.Cred;
+import cc.sfclub.mirai.adapts.ChatGroup;
+import cc.sfclub.mirai.adapts.Contact;
 import cc.sfclub.mirai.packets.GroupMemberInfo;
 import cc.sfclub.mirai.packets.GroupMessages;
 import cc.sfclub.mirai.packets.GroupQuoteMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
-import cc.sfclub.transform.ChatGroup;
-import cc.sfclub.transform.Contact;
 
 import java.util.Set;
 

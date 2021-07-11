@@ -1,0 +1,5 @@
+name: Minecraft2Mirai
+authors: [project-polar,iceBear67]
+version: 0.16
+main: cc.sfclub.mirai.AdapterMain
+api-version: 1.13

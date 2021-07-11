@@ -1,14 +1,12 @@
 package cc.sfclub.mirai.bot;
 
-import cc.sfclub.core.Core;
 import cc.sfclub.mirai.Cred;
+import cc.sfclub.mirai.adapts.Contact;
 import cc.sfclub.mirai.packets.FriendMessage;
 import cc.sfclub.mirai.packets.FriendQuoteMessage;
 import cc.sfclub.mirai.packets.TempMessage;
 import cc.sfclub.mirai.packets.TempQuoteMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
-import cc.sfclub.transform.Contact;
-import cc.sfclub.user.User;
 import lombok.Getter;
 
 public class QQContact extends Contact {
@@ -36,10 +34,6 @@ public class QQContact extends Contact {
         return nick;
     }
 
-    @Override
-    public User asPermObj() {
-        return Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(getID()));
-    }
 
     @Override
     public void sendMessage(String s) {
