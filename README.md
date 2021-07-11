@@ -13,6 +13,6 @@ Example:
   "reconnectLimit": 10,
   "reconnectTimeWait": 3000,
   "debug": true,
-  "targetGroup": 606989891 // qq group
+  "targetGroup": 114514 // qq group
 }
 ```
