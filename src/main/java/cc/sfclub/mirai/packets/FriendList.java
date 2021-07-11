@@ -1,6 +1,7 @@
 package cc.sfclub.mirai.packets;
 
 import cc.sfclub.mirai.Packet;
+import cc.sfclub.mirai.adapts.SBSpigot;
 import cc.sfclub.mirai.packets.received.contact.MiraiContact;
 import com.google.gson.JsonParser;
 import lombok.Builder;
@@ -29,7 +30,7 @@ public class FriendList extends Packet {
 
     public List<MiraiContact> asGroups() {
         List<MiraiContact> contacts = new ArrayList<>();
-        JsonParser.parseString(getRawResponse())
+        SBSpigot.JP.parse(getRawResponse())
                 .getAsJsonArray()
                 .forEach(j -> contacts.add(gson.fromJson(j, MiraiContact.class)));
         return contacts;

@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 /**
- * 三个参数任选其一，出现多个参数时，按照imageId > url > file的优先级
  */
 @Getter
 @Builder

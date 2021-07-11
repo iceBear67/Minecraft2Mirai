@@ -1,7 +1,0 @@
-{
-  "name": "MiraiAdapter",
-  "main": "cc.sfclub.mirai.AdapterMain",
-  "version": "0.0.1",
-  "autoRegister": true,
-  "dataClass": "cc.sfclub.mirai.Config"
-}

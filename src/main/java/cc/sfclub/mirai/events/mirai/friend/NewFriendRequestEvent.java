@@ -9,7 +9,6 @@ public class NewFriendRequestEvent extends FriendEvent {
     private long eventId;
     private long fromId;
     /**
-     * 申请人如果通过某个群添加好友，该项为该群群号；否则为0
      */
     private long groupId;
     private String nick;

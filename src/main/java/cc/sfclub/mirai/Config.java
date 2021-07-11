@@ -14,10 +14,7 @@ public class Config {
     public boolean displayMessage = false;
     public int reconnectLimit = 10;
     public int reconnectTimeWait = 3000;
-    /**
-     * 如果设置为false,则拒收未注册用户的信息。
-     */
-    public boolean autoCreateAccount = true;
-    public boolean autoAcceptFriendRequest = true;
-    public boolean autoAcceptGroupRequest = true;
+    /***/
+    public boolean debug=false;
+    public long targetGroup=114514L;
 }

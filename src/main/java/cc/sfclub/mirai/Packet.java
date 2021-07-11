@@ -1,6 +1,5 @@
 package cc.sfclub.mirai;
 
-import cc.sfclub.core.Core;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
@@ -25,7 +24,7 @@ public abstract class Packet {
 
     public Request buildRequest() {
         String packet = gson.toJson(this);
-        if (debugPacketContent() && Core.get().config().isDebug())
+        if (debugPacketContent() && AdapterMain.getPlugin(AdapterMain.class).getMainConfig().debug)
             logger.info("[MiraiAdapter] new packet({}): {}", this.getClass().getSimpleName(), packet);
         Request.Builder builder=new Request.Builder().url(Config.getInst().baseUrl+getTargetedPath());
         if(getMethod()==HttpMethod.GET){

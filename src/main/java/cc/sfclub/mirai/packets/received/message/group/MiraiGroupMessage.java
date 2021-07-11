@@ -1,5 +1,6 @@
 package cc.sfclub.mirai.packets.received.message.group;
 
+import cc.sfclub.mirai.adapts.SBSpigot;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.Source;
@@ -33,7 +34,7 @@ public class MiraiGroupMessage extends MiraiMessage {
     @SneakyThrows
     public static Optional<MiraiGroupMessage> parseJson(String json) {
         MiraiGroupMessage origin = gson.fromJson(json, MiraiGroupMessage.class);
-        JsonElement element = JsonParser.parseString(json);
+        JsonElement element = SBSpigot.JP.parse(json);
         if (!element.getAsJsonObject().has("messageChain")) return Optional.empty();
         JsonArray messageChain = element.getAsJsonObject().get("messageChain").getAsJsonArray();
         origin.messageChain = MessageUtil.deserializeJsonMessageChain(messageChain);

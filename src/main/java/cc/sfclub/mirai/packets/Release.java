@@ -1,6 +1,7 @@
 package cc.sfclub.mirai.packets;
 
 import cc.sfclub.mirai.Packet;
+import cc.sfclub.mirai.adapts.SBSpigot;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Builder;
@@ -12,7 +13,7 @@ public class Release extends Packet {
     private String sessionKey;
     private long qq;
     public Optional<String> asMessage(){
-        JsonObject json=JsonParser.parseString(getRawResponse()).getAsJsonObject();
+        JsonObject json= SBSpigot.JP.parse(getRawResponse()).getAsJsonObject();
         if(!json.has("msg"))return Optional.empty();
         return Optional.ofNullable(json.get("msg").getAsString());
     }
