@@ -11,10 +11,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.Arrays;
+
 public class BukkitMessageEvent implements Listener {
     @Subscribe
     public void onMiraiMessage(MiraiGroupMessage miraiGroupMessage){
         if(miraiGroupMessage.getSender().getGroup().getId()!=Config.getInst().targetGroup){
+            return;
+        }
+        if(MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain()).startsWith(".list")){
+            AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).get()
+                    .sendMessage("Online players: "+Arrays.toString(Bukkit.getServer().getOnlinePlayers().toArray()));
             return;
         }
         String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
