@@ -43,7 +43,7 @@ public class MessageUtil {
             case "AtAll":
                 return "[AtAll]";
             case "Image":
-                return "[Image]";
+                return "[图片]";
             case "Plain":
                 return ((Plain) message).getText();
             case "Quote":
@@ -84,7 +84,7 @@ public class MessageUtil {
             case "Image":
                 return Image.builder().url(new String(Base64.getUrlDecoder().decode(args[1]))).build();
         }
-        logger.warn("Unsupported type: {}", args[0]);
+       // logger.warn("Unsupported type: {}", args[0]);
         return Plain.builder().text(catcode).build();
     }
 

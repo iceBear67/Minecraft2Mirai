@@ -108,7 +108,7 @@ public class AdapterMain extends JavaPlugin {
 
     public synchronized void refreshContacts() {
         GroupList.builder().sessionKey(Cred.sessionKey).build().send().asGroups().forEach(this::refreshGroup);
-        getLogger().info("[MiraiAdapter] Updating friendList");
+       // getLogger().info("[MiraiAdapter] Updating friendList");
         FriendList.builder().sessionKey(Cred.sessionKey).build()
                 .send().asGroups().forEach(contact -> {
             QQBot.contactsAndGroup.put(contact.getId(), -1L);

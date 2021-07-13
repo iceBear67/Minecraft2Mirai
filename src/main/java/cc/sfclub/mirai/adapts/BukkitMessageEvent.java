@@ -28,12 +28,12 @@ public class BukkitMessageEvent implements Listener {
         String context = MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain());
         if(Config.getInst().usePrefix){
             if(context.startsWith("#")){
-                String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
-                Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE+"[QQ] "+ChatColor.GREEN+sender+ChatColor.WHITE+": "+context);
+                String sender = miraiGroupMessage.getSender().getMemberName() ;
+                Bukkit.broadcastMessage("[QQ] "+sender+ChatColor.WHITE+": "+context);
             }
         }else{
             String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
-            Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE+"[QQ] "+ChatColor.GREEN+sender+ChatColor.WHITE+": "+context);
+            Bukkit.broadcastMessage("[QQ] "+sender+ChatColor.WHITE+": "+context);
         }
     }
     @EventHandler
@@ -46,11 +46,11 @@ public class BukkitMessageEvent implements Listener {
         if(Config.getInst().usePrefix){
             if(message.startsWith("#")){
                 AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
-                        .sendMessage("[MC] "+sender+": "+message);
+                        .sendMessage("[服务器] "+sender+": "+message);
             }
         }else{
             AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
-                    .sendMessage("[MC] "+sender+": "+message);
+                    .sendMessage("[服务器] "+sender+": "+message);
 
         }
 
