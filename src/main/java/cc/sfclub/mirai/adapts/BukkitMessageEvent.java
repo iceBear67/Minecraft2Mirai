@@ -6,6 +6,7 @@ import cc.sfclub.mirai.packets.received.message.group.MiraiGroupMessage;
 import cc.sfclub.mirai.utils.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -21,22 +22,37 @@ public class BukkitMessageEvent implements Listener {
         }
         if(MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain()).startsWith(".list")){
             AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).get()
-                    .sendMessage("Online players: "+Arrays.toString(Bukkit.getServer().getOnlinePlayers().toArray()));
+                    .sendMessage("Online players: "+Arrays.toString(Bukkit.getServer().getOnlinePlayers().stream().map(HumanEntity::getName).toArray()));
             return;
         }
-        String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
         String context = MessageUtil.deserializeChain(miraiGroupMessage.getMessageChain());
-        Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE+"[QQ] "+ChatColor.GREEN+sender+ChatColor.WHITE+": "+context);
+        if(Config.getInst().usePrefix){
+            if(context.startsWith("#")){
+                String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
+                Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE+"[QQ] "+ChatColor.GREEN+sender+ChatColor.WHITE+": "+context);
+            }
+        }else{
+            String sender = miraiGroupMessage.getSender().getMemberName() +"("+miraiGroupMessage.getSender().getId()+")";
+            Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE+"[QQ] "+ChatColor.GREEN+sender+ChatColor.WHITE+": "+context);
+        }
     }
     @EventHandler
     public void onMessage(AsyncPlayerChatEvent chatEvent){
         if(chatEvent.isCancelled()){
             return;
         }
-        String sender = chatEvent.getPlayer().getDisplayName();
+        String sender = chatEvent.getPlayer().getName();
         String message = chatEvent.getMessage();
-        AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
-                .sendMessage("[MC] "+sender+": "+message);
+        if(Config.getInst().usePrefix){
+            if(message.startsWith("#")){
+                AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
+                        .sendMessage("[MC] "+sender+": "+message);
+            }
+        }else{
+            AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
+                    .sendMessage("[MC] "+sender+": "+message);
+
+        }
 
     }
 }
