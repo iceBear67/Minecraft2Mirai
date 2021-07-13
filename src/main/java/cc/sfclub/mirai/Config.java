@@ -14,6 +14,7 @@ public class Config {
     public boolean displayMessage = false;
     public int reconnectLimit = 10;
     public int reconnectTimeWait = 3000;
+    public boolean usePrefix=true;
     /***/
     public boolean debug=false;
     public long targetGroup=114514L;
