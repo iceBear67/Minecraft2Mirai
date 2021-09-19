@@ -12,15 +12,14 @@ import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.user.User;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WsListener extends WebSocketListener {
+import java.net.http.WebSocket;
+import java.util.concurrent.CompletionStage;
+
+public class WsListener implements WebSocket.Listener {
     private static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(WsListener.class);
 
@@ -28,49 +27,47 @@ public class WsListener extends WebSocketListener {
         logger.info("WsListener Started!");
     }
 
-    @SneakyThrows
     @Override
-    public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-        super.onFailure(webSocket, t, response);
-        logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
-        t.printStackTrace();
+    public void onError(WebSocket webSocket, Throwable error) {
+        logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", error.getMessage());
+        error.printStackTrace();
         AdapterMain.get(AdapterMain.class).authed = false;
         AdapterMain.get(AdapterMain.class).requestReconnect();
+
     }
 
     @Override
-    public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        super.onClosing(webSocket, code, reason);
+    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
         if (reason.equals("onDisable")) {
-            logger.info("WsListener shutting down...");
-            return;
+            logger.info("[MiraiAdapter] WsListener shutting down...");
+            return null;
         }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
+        return null;
     }
 
     @Override
-    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-        super.onOpen(webSocket, response);
+    public void onOpen(WebSocket webSocket) {
         AdapterMain.get(AdapterMain.class).reconnectCounter = 0;
-        logger.info("WsListener Connected!");
+        logger.info("[MiraiAdapter] Connected to Mirai!");
     }
 
     @Override
-    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        super.onMessage(webSocket, text);
-        MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
+    public CompletionStage<?> onText(WebSocket webSocket, CharSequence text, boolean last) {
+        WebSocket.Listener.super.onText(webSocket, text, last);
+        MiraiMessage message = gson.fromJson(text.toString(), MiraiMessage.class);
         if (MessageUtil.isMiraiEvent(message.getType())) {
-            onELMessage(webSocket, text);
-            return;
+            onELMessage(webSocket, text.toString());
+            return null;
         }
         switch (message.getType()) {
             case "GroupMessage":
-                MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text).orElseThrow(IllegalArgumentException::new);
+                MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text.toString()).orElseThrow(IllegalArgumentException::new);
                 AdapterMain.getMiraiEventBus().post(miraiGroupMessage);
                 User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 if (u == null) {
                     if (!Config.getInst().autoCreateAccount) {
-                        return;
+                        return null;
                     }
                     u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 }
@@ -102,7 +99,7 @@ public class WsListener extends WebSocketListener {
                 break;
             case "FriendMessage":
             case "TempMessage":
-                MiraiContactMessage.parseJson(text).ifPresent(Msg -> {
+                MiraiContactMessage.parseJson(text.toString()).ifPresent(Msg -> {
                     AdapterMain.getMiraiEventBus().post(Msg);
                     User u3 = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
                     if (u3 == null) {
@@ -127,9 +124,10 @@ public class WsListener extends WebSocketListener {
                 });
                 break;
         }
+        return null;
     }
 
-    public void onELMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+    public void onELMessage(WebSocket webSocket,  String text) {
         MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
         if (!MessageUtil.isMiraiEvent(message.getType())) return;
         String type = message.getType();
