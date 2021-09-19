@@ -15,12 +15,15 @@ import cc.sfclub.transform.Contact;
 import cc.sfclub.user.perm.Perm;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,11 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AdapterMain extends Plugin {
     @Getter
-    private static final OkHttpClient httpClient = new OkHttpClient.Builder()
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .build();
+    private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.of(6, ChronoUnit.SECONDS)).build();
     @Getter
     private static final EventBus MiraiEventBus = EventBus.builder().sendNoSubscriberEvent(false).logNoSubscriberMessages(false).build();
     @Getter
@@ -47,7 +46,7 @@ public class AdapterMain extends Plugin {
 
     @Subscribe
     @SuppressWarnings("all")
-    public void onServerStart(ServerStartedEvent e) {
+    public void onServerStart(ServerStartedEvent e) throws URISyntaxException {
         getLogger().info("Mirai-Adapter loading");
         getConfig().saveDefault();
         getConfig().reloadConfig();
@@ -82,12 +81,12 @@ public class AdapterMain extends Plugin {
                         if (this.isLoaded())
                             refreshContacts();
                     });
-                    Request request = new Request.Builder()
-                            .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
-                            .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
-                            .build();
                     getLogger().info("[MiraiAdapter] Connecting to {}", Config.getInst().baseUrl.replaceAll("http", "ws"));
-                    wsMessageListener = httpClient.newWebSocket(request, new WsListener());
+                    try {
+                        httpClient.newWebSocketBuilder().buildAsync(new URI(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey)),new WsListener()).thenApply(ez->wsMessageListener=ez);
+                    } catch (URISyntaxException ex) {
+                        ex.printStackTrace();
+                    }
                 });
         if (Cred.sessionKey == null)
             getLogger().warn("Failed to get session. Response: {}", auth.getRawResponse());
@@ -171,7 +170,7 @@ public class AdapterMain extends Plugin {
             );
         }
         if (wsMessageListener != null) {
-            wsMessageListener.close(1000, "onDisable");
+            wsMessageListener.sendClose(1000, "onDisable");
         }
         threadPool.shutdownNow();
     }
@@ -181,7 +180,7 @@ public class AdapterMain extends Plugin {
             getLogger().error("Gave up to connect Mirai!!");
             return;
         }
-        wsMessageListener.cancel();
+        wsMessageListener.abort();
         try {
             getLogger().info("[Reconnecter] Waiting to reconnect Mirai...");
             Thread.sleep(Config.getInst().reconnectTimeWait);
@@ -194,11 +193,11 @@ public class AdapterMain extends Plugin {
             }
         }
         getLogger().info("[Reconnecter] Re-connecting to Mirai");
-        Request request = new Request.Builder()
-                .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
-                .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
-                .build();
-        wsMessageListener = httpClient.newWebSocket(request, new WsListener());
+        try {
+            httpClient.newWebSocketBuilder().buildAsync(new URI(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey)),new WsListener()).thenApply(ez->wsMessageListener=ez);
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
     }
 
     protected synchronized void reAuth() {
