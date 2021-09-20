@@ -46,6 +46,8 @@ public class WsListener implements WebSocket.Listener {
             return null;
         }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
+        AdapterMain.get(AdapterMain.class).authed = false;
+        AdapterMain.get(AdapterMain.class).requestReconnect();
         return null;
     }
 
