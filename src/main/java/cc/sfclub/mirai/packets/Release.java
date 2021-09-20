@@ -24,7 +24,7 @@ public class Release extends Packet {
 
     @Override
     public Release send() {
-        return this.getClass().cast(super.send());
+        return this.getClass().cast(super.sendSync());
     }
 
     @Override

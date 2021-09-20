@@ -4,6 +4,7 @@ import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.Source;
 import cc.sfclub.mirai.packets.received.sender.MiraiGroupSender;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import cc.sfclub.mirai.utils.MessageUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -32,8 +33,8 @@ public class MiraiGroupMessage extends MiraiMessage {
 
     @SneakyThrows
     public static Optional<MiraiGroupMessage> parseJson(String json) {
-        MiraiGroupMessage origin = gson.fromJson(json, MiraiGroupMessage.class);
-        JsonElement element = JsonParser.parseString(json);
+        MiraiGroupMessage origin = AdaptedJsonParser.adaptedSerialize(json, MiraiGroupMessage.class);
+        JsonElement element = AdaptedJsonParser.parseString(json);
         if (!element.getAsJsonObject().has("messageChain")) return Optional.empty();
         JsonArray messageChain = element.getAsJsonObject().get("messageChain").getAsJsonArray();
         origin.messageChain = MessageUtil.deserializeJsonMessageChain(messageChain);

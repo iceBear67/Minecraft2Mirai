@@ -27,10 +27,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class AdapterMain extends Plugin {
     @Getter
@@ -54,7 +52,7 @@ public class AdapterMain extends Plugin {
         getLogger().info("Try logging in..");
         //Init database
         Auth auth = Auth.builder()
-                .authKey(Config.getInst().authKey)
+                .verifyKey(Config.getInst().authKey)
                 .build();
         auth.send()
                 .asSession()
@@ -62,7 +60,7 @@ public class AdapterMain extends Plugin {
                     getLogger().info("[MiraiAdapter] Logged in!");
                     authed = true;
                     Cred.sessionKey = s;
-                    String response = Verify.builder().qq(Config.getInst().QQ)
+                    String response = Bind.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
                             .build()
                             .send()
@@ -81,9 +79,10 @@ public class AdapterMain extends Plugin {
                         if (this.isLoaded())
                             refreshContacts();
                     });
-                    getLogger().info("[MiraiAdapter] Connecting to {}", Config.getInst().baseUrl.replaceAll("http", "ws"));
                     try {
-                        httpClient.newWebSocketBuilder().buildAsync(new URI(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey)),new WsListener()).thenApply(ez->wsMessageListener=ez);
+                        var url = Config.getInst().baseUrl.replaceAll("http", "ws").concat("all?verifyKey=").concat(Config.getInst().authKey)+"&qq="+ Config.getInst().QQ;
+                        getLogger().info("[MiraiAdapter] Connecting to {}", url);
+                        wsMessageListener=httpClient.newWebSocketBuilder().buildAsync(new URI(url),new WsListener()).join();
                     } catch (URISyntaxException ex) {
                         ex.printStackTrace();
                     }
@@ -202,7 +201,7 @@ public class AdapterMain extends Plugin {
 
     protected synchronized void reAuth() {
         Auth auth = Auth.builder()
-                .authKey(Config.getInst().authKey)
+                .verifyKey(Config.getInst().authKey)
                 .build();
         auth.send()
                 .asSession()
@@ -210,7 +209,7 @@ public class AdapterMain extends Plugin {
                     authed = true;
                     getLogger().info("[MiraiAdapter] Logged in!");
                     Cred.sessionKey = s;
-                    String response = Verify.builder().qq(Config.getInst().QQ)
+                    String response = Bind.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
                             .build()
                             .send()

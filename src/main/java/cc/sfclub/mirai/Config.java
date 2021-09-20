@@ -12,6 +12,7 @@ public class Config {
     public long QQ = 3325273573L;
     public String authKey = "AuthKey_HERE";
     public boolean displayMessage = false;
+    public int responseWaitTime = 10;
     public int reconnectLimit = 10;
     public int reconnectTimeWait = 3000;
     /**
