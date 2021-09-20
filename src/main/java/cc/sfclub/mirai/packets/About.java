@@ -11,7 +11,7 @@ public class About extends Packet {
     }
     @Override
     public About send(){
-        Result result=super.send().asResult();
+        Result result=super.sendSync().asResult();
         logger.info(getRawResponse());
         return this;
     }

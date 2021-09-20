@@ -2,6 +2,7 @@ package cc.sfclub.mirai.packets;
 
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.packets.received.contact.MiraiContact;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import com.google.gson.JsonParser;
 import lombok.Builder;
 
@@ -19,7 +20,7 @@ public class FriendList extends Packet {
 
     @Override
     public FriendList send() {
-        return (FriendList) super.send();
+        return (FriendList) super.sendSync();
     }
 
     @Override
@@ -29,7 +30,7 @@ public class FriendList extends Packet {
 
     public List<MiraiContact> asGroups() {
         List<MiraiContact> contacts = new ArrayList<>();
-        JsonParser.parseString(getRawResponse())
+        AdaptedJsonParser.parseString(getRawResponse())
                 .getAsJsonArray()
                 .forEach(j -> contacts.add(gson.fromJson(j, MiraiContact.class)));
         return contacts;

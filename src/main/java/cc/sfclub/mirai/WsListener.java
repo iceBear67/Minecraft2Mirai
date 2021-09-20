@@ -8,6 +8,7 @@ import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.contact.MiraiContactMessage;
 import cc.sfclub.mirai.packets.received.message.group.MiraiGroupMessage;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import cc.sfclub.mirai.utils.MessageUtil;
 import cc.sfclub.user.User;
 import com.google.gson.Gson;
@@ -17,14 +18,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.http.WebSocket;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public class WsListener implements WebSocket.Listener {
     private static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(WsListener.class);
-
+    private StringBuilder buffer = new StringBuilder();
+    private CompletableFuture<?> accumulatedMessage = new CompletableFuture<>();
     public WsListener() {
-        logger.info("WsListener Started!");
+
     }
 
     @Override
@@ -48,17 +51,26 @@ public class WsListener implements WebSocket.Listener {
 
     @Override
     public void onOpen(WebSocket webSocket) {
+        webSocket.request(1);
         AdapterMain.get(AdapterMain.class).reconnectCounter = 0;
         logger.info("[MiraiAdapter] Connected to Mirai!");
     }
-
     @Override
-    public CompletionStage<?> onText(WebSocket webSocket, CharSequence text, boolean last) {
-        WebSocket.Listener.super.onText(webSocket, text, last);
-        MiraiMessage message = gson.fromJson(text.toString(), MiraiMessage.class);
+    public CompletionStage<?> onText(WebSocket webSocket, CharSequence chars, boolean last) {
+        buffer.append(chars);
+        webSocket.request(1);
+        if(!last){
+            return accumulatedMessage;
+        }
+        // starts.
+        String text = buffer.toString();
+        buffer = new StringBuilder();
+        accumulatedMessage.complete(null);
+        accumulatedMessage = new CompletableFuture<>();
+        MiraiMessage message = AdaptedJsonParser.adaptedSerialize(text.toString(), MiraiMessage.class);
         if (MessageUtil.isMiraiEvent(message.getType())) {
             onELMessage(webSocket, text.toString());
-            return null;
+            return accumulatedMessage;
         }
         switch (message.getType()) {
             case "GroupMessage":
@@ -67,7 +79,7 @@ public class WsListener implements WebSocket.Listener {
                 User u = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 if (u == null) {
                     if (!Config.getInst().autoCreateAccount) {
-                        return null;
+                        return accumulatedMessage;
                     }
                     u = Core.get().userManager().register(Core.get().permCfg().getDefaultGroup(), QQBot.PLATFORM_NAME, String.valueOf(miraiGroupMessage.getSender().getId()));
                 }
@@ -124,11 +136,11 @@ public class WsListener implements WebSocket.Listener {
                 });
                 break;
         }
-        return null;
+        return accumulatedMessage;
     }
 
     public void onELMessage(WebSocket webSocket,  String text) {
-        MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
+        MiraiMessage message = AdaptedJsonParser.adaptedSerialize(text, MiraiMessage.class);
         if (!MessageUtil.isMiraiEvent(message.getType())) return;
         String type = message.getType();
         try {

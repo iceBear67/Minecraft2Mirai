@@ -4,6 +4,7 @@ import cc.sfclub.mirai.packets.received.contact.MiraiContact;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.MiraiTypeMessage;
 import cc.sfclub.mirai.packets.received.message.types.Source;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import cc.sfclub.mirai.utils.MessageUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -27,7 +28,7 @@ public class MiraiContactMessage extends MiraiMessage {
 
     @SneakyThrows
     public static Optional<MiraiContactMessage> parseJson(String json) {
-        MiraiContactMessage origin = gson.fromJson(json, MiraiContactMessage.class);
+        MiraiContactMessage origin = AdaptedJsonParser.adaptedSerialize(json, MiraiContactMessage.class);
         JsonElement element = JsonParser.parseString(json);
         if (!element.getAsJsonObject().has("messageChain")) return Optional.empty();
         JsonArray messageChain = element.getAsJsonObject().get("messageChain").getAsJsonArray();
