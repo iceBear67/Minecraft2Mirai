@@ -29,7 +29,7 @@ public class MiraiContactMessage extends MiraiMessage {
     @SneakyThrows
     public static Optional<MiraiContactMessage> parseJson(String json) {
         MiraiContactMessage origin = AdaptedJsonParser.adaptedSerialize(json, MiraiContactMessage.class);
-        JsonElement element = JsonParser.parseString(json);
+        JsonElement element = AdaptedJsonParser.parseString(json);
         if (!element.getAsJsonObject().has("messageChain")) return Optional.empty();
         JsonArray messageChain = element.getAsJsonObject().get("messageChain").getAsJsonArray();
         origin.messageChain = MessageUtil.deserializeJsonMessageChain(messageChain);

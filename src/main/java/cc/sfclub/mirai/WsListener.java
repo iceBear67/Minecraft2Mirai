@@ -113,7 +113,7 @@ public class WsListener implements WebSocket.Listener {
                 break;
             case "FriendMessage":
             case "TempMessage":
-                MiraiContactMessage.parseJson(text.toString()).ifPresent(Msg -> {
+                MiraiContactMessage.parseJson(text).ifPresent(Msg -> {
                     AdapterMain.getMiraiEventBus().post(Msg);
                     User u3 = Core.get().userManager().byPlatformID(QQBot.PLATFORM_NAME, String.valueOf(Msg.getSender().getId()));
                     if (u3 == null) {
@@ -130,7 +130,7 @@ public class WsListener implements WebSocket.Listener {
                     );
                     Event.postEvent(privateMessage);
                     if (Config.getInst().displayMessage) {
-                        logger.info("[MiraiAdapter] [CONTACT] [{}({})] ->{}",
+                        logger.info("[MiraiAdapter] [CONTACT] [{}({})] -> {}",
                                 Msg.getSender().getRemark(),
                                 Msg.getSender().getId(),
                                 privateMessage.getMessage());
