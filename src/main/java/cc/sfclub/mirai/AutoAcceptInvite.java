@@ -11,15 +11,15 @@ public class AutoAcceptInvite {
     public void on(BotInvitedJoinGroupRequestEvent e) {
         if (!Config.getInst().autoAcceptGroupRequest) return;
         e.deal(DealGroupInviteRequest.Operate.ACCEPT, "Hi");
-        AdapterMain.get(AdapterMain.class).refreshContacts();
-        AdapterMain.get(AdapterMain.class).getLogger().info("[MiraiAdapter] AutoAcceptGroupInvitation - Accepted: {} from group: {} (said {})", e.getFromId(), e.getGroupId(), e.getMessage());
+        AdapterMain.INSTANCE.refreshContacts();
+        AdapterMain.INSTANCE.getLogger().info("[MiraiAdapter] AutoAcceptGroupInvitation - Accepted: {} from group: {} (said {})", e.getFromId(), e.getGroupId(), e.getMessage());
     }
 
     @Subscribe
     public void onFriendRequest(NewFriendRequestEvent e) {
         if (!Config.getInst().autoAcceptFriendRequest) return;
         e.deal(DealFriendRequest.Operate.ACCEPT, "Hi");
-        AdapterMain.get(AdapterMain.class).refreshContacts();
-        AdapterMain.get(AdapterMain.class).getLogger().info("[MiraiAdapter] AutoAcceptFriendReq - Accepted: {} from group: {} (said {})", e.getFromId(), e.getGroupId(), e.getMessage());
+        AdapterMain.INSTANCE.refreshContacts();
+        AdapterMain.INSTANCE.getLogger().info("[MiraiAdapter] AutoAcceptFriendReq - Accepted: {} from group: {} (said {})", e.getFromId(), e.getGroupId(), e.getMessage());
     }
 }
