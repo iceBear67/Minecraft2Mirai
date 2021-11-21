@@ -15,8 +15,8 @@ import cc.sfclub.transform.Contact;
 import cc.sfclub.user.perm.Perm;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,8 +41,9 @@ public class AdapterMain extends Plugin {
     private ExecutorService threadPool = Executors.newFixedThreadPool(4);
     protected int reconnectCounter = 0;
     protected boolean authed = false;
+    public static AdapterMain INSTANCE;
 
-    @Subscribe
+    //@Subscribe
     @SuppressWarnings("all")
     public void onServerStart(ServerStartedEvent e) throws URISyntaxException {
         getLogger().info("Mirai-Adapter loading");
@@ -151,11 +152,12 @@ public class AdapterMain extends Plugin {
         bot.addGroup(group, true);
     }
 
+    @SneakyThrows
     @Override
     public void onEnable() {
-
+        INSTANCE = this;
+        onServerStart(null);
     }
-
     @Override
     public void onDisable() {
         if (authed) {

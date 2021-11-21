@@ -2,6 +2,6 @@
   "name": "MiraiAdapter",
   "main": "cc.sfclub.mirai.AdapterMain",
   "version": "2.0",
-  "autoRegister": true,
+  "autoRegister": false,
   "dataClass": "cc.sfclub.mirai.Config"
 }

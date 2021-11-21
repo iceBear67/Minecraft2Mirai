@@ -34,8 +34,8 @@ public class WsListener implements WebSocket.Listener {
     public void onError(WebSocket webSocket, Throwable error) {
         logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", error.getMessage());
         error.printStackTrace();
-        AdapterMain.get(AdapterMain.class).authed = false;
-        AdapterMain.get(AdapterMain.class).requestReconnect();
+        AdapterMain.INSTANCE.authed = false;
+        AdapterMain.INSTANCE.requestReconnect();
 
     }
 
@@ -46,15 +46,15 @@ public class WsListener implements WebSocket.Listener {
             return null;
         }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
-        AdapterMain.get(AdapterMain.class).authed = false;
-        AdapterMain.get(AdapterMain.class).requestReconnect();
+        AdapterMain.INSTANCE.authed = false;
+        AdapterMain.INSTANCE.requestReconnect();
         return null;
     }
 
     @Override
     public void onOpen(WebSocket webSocket) {
         webSocket.request(1);
-        AdapterMain.get(AdapterMain.class).reconnectCounter = 0;
+        AdapterMain.INSTANCE.reconnectCounter = 0;
         logger.info("[MiraiAdapter] Connected to Mirai!");
     }
     @Override
@@ -89,7 +89,7 @@ public class WsListener implements WebSocket.Listener {
                 synchronized (this) {
                     QQBot bot = (QQBot) Core.get().bot("QQ").get();
                     if (bot.getGroup(miraiGroupMessage.getSender().getGroup().getId()).isEmpty()) {
-                        AdapterMain.get(AdapterMain.class).refreshGroup(
+                        AdapterMain.INSTANCE.refreshGroup(
                                 miraiGroupMessage.getSender().getGroup()
                         );
                     }
