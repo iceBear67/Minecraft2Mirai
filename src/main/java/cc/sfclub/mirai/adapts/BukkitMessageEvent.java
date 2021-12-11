@@ -37,7 +37,7 @@ public class BukkitMessageEvent implements Listener {
         if(Config.getInst().usePrefixFromQQ){
             if(context.startsWith("#")){
                 String sender = miraiGroupMessage.getSender().getMemberName() ;
-                var bcs = TextComponent.fromLegacyText(ChatColor.GREEN+sender+ChatColor.WHITE+"> "+context);
+                var bcs = TextComponent.fromLegacyText(ChatColor.GRAY+sender+ChatColor.WHITE+" > "+context);
                 for (BaseComponent bc : bcs) {
                     bc.setHoverEvent(COMPILED_HOVER);
                 }
@@ -47,7 +47,7 @@ public class BukkitMessageEvent implements Listener {
             }
         }else{
             String sender = miraiGroupMessage.getSender().getMemberName() ;
-            var bcs = TextComponent.fromLegacyText(ChatColor.GREEN+sender+ChatColor.WHITE+"> "+context);
+            var bcs = TextComponent.fromLegacyText(ChatColor.GRAY+sender+ChatColor.WHITE+" > "+context);
             for (BaseComponent bc : bcs) {
                 bc.setHoverEvent(COMPILED_HOVER);
             }
