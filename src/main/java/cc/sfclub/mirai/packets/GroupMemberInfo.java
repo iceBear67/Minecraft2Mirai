@@ -23,7 +23,7 @@ public class GroupMemberInfo extends Packet {
 
     @Override
     public GroupMemberInfo send() {
-        super.send();
+        super.sendSync();
         return this;
     }
 

@@ -9,29 +9,26 @@ import cc.sfclub.mirai.packets.received.sender.MiraiGroup;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import lombok.Getter;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import lombok.SneakyThrows;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class AdapterMain extends JavaPlugin {
     @Getter
-    private static final OkHttpClient httpClient = new OkHttpClient.Builder()
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .build();
+    private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.of(6, ChronoUnit.SECONDS)).build();
     @Getter
     private static final EventBus MiraiEventBus = EventBus.builder().sendNoSubscriberEvent(false).logNoSubscriberMessages(false).build();
     @Getter
@@ -40,6 +37,7 @@ public class AdapterMain extends JavaPlugin {
     private ExecutorService threadPool = Executors.newFixedThreadPool(4);
     protected int reconnectCounter = 0;
     protected boolean authed = false;
+    public static AdapterMain INSTANCE;
     //Adaptions below..
     private SimpleConfig<Config> config;
     @Getter
@@ -47,11 +45,12 @@ public class AdapterMain extends JavaPlugin {
     @Getter
     private CommandDispatcher<Source> dispatcher = new CommandDispatcher<>();
 
+    //@Subscribe
     public Config getMainConfig(){
         return config.get();
     }
     @SuppressWarnings("all")
-    public void onServerStart() {
+    public void onServerStart(ServerStartedEvent e) throws URISyntaxException {
         BukkitMessageEvent a =new BukkitMessageEvent();
         this.getServer().getPluginManager().registerEvents(a,this);
         getMiraiEventBus().register(a);
@@ -68,7 +67,7 @@ public class AdapterMain extends JavaPlugin {
         getLogger().info("Try logging in..");
         //Init database
         Auth auth = Auth.builder()
-                .authKey(Config.getInst().authKey)
+                .verifyKey(Config.getInst().authKey)
                 .build();
         auth.send()
                 .asSession()
@@ -76,7 +75,7 @@ public class AdapterMain extends JavaPlugin {
                     getLogger().info("[MiraiAdapter] Logged in!");
                     authed = true;
                     Cred.sessionKey = s;
-                    String response = Verify.builder().qq(Config.getInst().QQ)
+                    String response = Bind.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
                             .build()
                             .send()
@@ -87,15 +86,22 @@ public class AdapterMain extends JavaPlugin {
                     //Bot bot = Core.get().bot(QQBot.PLATFORM_NAME).orElseThrow(() -> new IllegalArgumentException("Unknown error"));
                     bot = new QQBot();
                     refreshContacts();
-                    Bukkit.getScheduler().runTaskTimerAsynchronously(this,()->{
-                        refreshContacts();
-                    },0L,30*20L);
-                    Request request = new Request.Builder()
-                            .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
-                            .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
-                            .build();
-                    getLogger().info("[MiraiAdapter] Connecting to "+ Config.getInst().baseUrl.replaceAll("http", "ws"));
-                    wsMessageListener = httpClient.newWebSocket(request, new WsListener());
+                    threadPool.submit(() -> {
+                        try {
+                            Thread.sleep(300 * 1000);
+                        } catch (InterruptedException ignored) {
+
+                        }
+                        if (this.isLoaded())
+                            refreshContacts();
+                    });
+                    try {
+                        var url = Config.getInst().baseUrl.replaceAll("http", "ws").concat("all?verifyKey=").concat(Config.getInst().authKey)+"&qq="+ Config.getInst().QQ;
+                        getLogger().info("[MiraiAdapter] Connecting to {}", url);
+                        wsMessageListener=httpClient.newWebSocketBuilder().buildAsync(new URI(url),new WsListener()).join();
+                    } catch (URISyntaxException ex) {
+                        ex.printStackTrace();
+                    }
                 });
         if (Cred.sessionKey == null)
             getLogger().warning("Failed to get session. Response: "+ auth.getRawResponse());
@@ -131,11 +137,12 @@ public class AdapterMain extends JavaPlugin {
         bot.addGroup(group, true);
     }
 
+    @SneakyThrows
     @Override
     public void onEnable() {
-        onServerStart();
+        INSTANCE = this;
+        onServerStart(null);
     }
-
     @Override
     public void onDisable() {
         if (authed) {
@@ -149,7 +156,7 @@ public class AdapterMain extends JavaPlugin {
             );
         }
         if (wsMessageListener != null) {
-            wsMessageListener.close(1000, "onDisable");
+            wsMessageListener.sendClose(1000, "onDisable");
         }
         threadPool.shutdownNow();
     }
@@ -159,7 +166,7 @@ public class AdapterMain extends JavaPlugin {
             getLogger().warning("Giving up to connect Mirai!!");
             return;
         }
-        wsMessageListener.cancel();
+        wsMessageListener.abort();
         try {
             getLogger().info("[Reconnecter] Waiting to reconnect Mirai...");
             Thread.sleep(Config.getInst().reconnectTimeWait);
@@ -172,16 +179,16 @@ public class AdapterMain extends JavaPlugin {
             }
         }
         getLogger().info("[Reconnecter] Re-connecting to Mirai");
-        Request request = new Request.Builder()
-                .url(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey))
-                .addHeader("Sec-Websocket-Key", UUID.randomUUID().toString())
-                .build();
-        wsMessageListener = httpClient.newWebSocket(request, new WsListener());
+        try {
+            httpClient.newWebSocketBuilder().buildAsync(new URI(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey)),new WsListener()).thenApply(ez->wsMessageListener=ez);
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
     }
 
     protected synchronized void reAuth() {
         Auth auth = Auth.builder()
-                .authKey(Config.getInst().authKey)
+                .verifyKey(Config.getInst().authKey)
                 .build();
         auth.send()
                 .asSession()
@@ -189,7 +196,7 @@ public class AdapterMain extends JavaPlugin {
                     authed = true;
                     getLogger().info("[MiraiAdapter] Logged in!");
                     Cred.sessionKey = s;
-                    String response = Verify.builder().qq(Config.getInst().QQ)
+                    String response = Bind.builder().qq(Config.getInst().QQ)
                             .sessionKey(Cred.sessionKey)
                             .build()
                             .send()
