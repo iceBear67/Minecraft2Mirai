@@ -50,7 +50,7 @@ public class AdapterMain extends JavaPlugin {
         return config.get();
     }
     @SuppressWarnings("all")
-    public void onServerStart(ServerStartedEvent e) throws URISyntaxException {
+    public void onServerStart() throws URISyntaxException {
         BukkitMessageEvent a =new BukkitMessageEvent();
         this.getServer().getPluginManager().registerEvents(a,this);
         getMiraiEventBus().register(a);
@@ -85,19 +85,9 @@ public class AdapterMain extends JavaPlugin {
                     //Core.get().registerBot(new QQBot());
                     //Bot bot = Core.get().bot(QQBot.PLATFORM_NAME).orElseThrow(() -> new IllegalArgumentException("Unknown error"));
                     bot = new QQBot();
-                    refreshContacts();
-                    threadPool.submit(() -> {
-                        try {
-                            Thread.sleep(300 * 1000);
-                        } catch (InterruptedException ignored) {
-
-                        }
-                        if (this.isLoaded())
-                            refreshContacts();
-                    });
                     try {
                         var url = Config.getInst().baseUrl.replaceAll("http", "ws").concat("all?verifyKey=").concat(Config.getInst().authKey)+"&qq="+ Config.getInst().QQ;
-                        getLogger().info("[MiraiAdapter] Connecting to {}", url);
+                        getLogger().info("[MiraiAdapter] Connecting to "+ url);
                         wsMessageListener=httpClient.newWebSocketBuilder().buildAsync(new URI(url),new WsListener()).join();
                     } catch (URISyntaxException ex) {
                         ex.printStackTrace();
@@ -141,7 +131,7 @@ public class AdapterMain extends JavaPlugin {
     @Override
     public void onEnable() {
         INSTANCE = this;
-        onServerStart(null);
+        onServerStart();
     }
     @Override
     public void onDisable() {

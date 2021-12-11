@@ -1,5 +1,6 @@
 package cc.sfclub.mirai.utils;
 
+import cc.sfclub.mirai.adapts.SBSpigot;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
