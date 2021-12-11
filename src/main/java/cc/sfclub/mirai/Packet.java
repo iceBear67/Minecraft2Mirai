@@ -4,60 +4,104 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public abstract class Packet {
     protected static final Gson gson = new Gson();
     protected static final Logger logger = LoggerFactory.getLogger("Packets");
-    @Getter
-    private String rawResponse;
+    private volatile String rawResponse;
     private Result result;
 
     public Result asResult() {
         return result;
     }
 
-    public Request buildRequest() {
+    @SneakyThrows
+    public HttpRequest buildRequest() {
         String packet = gson.toJson(this);
         if (debugPacketContent() && AdapterMain.getPlugin(AdapterMain.class).getMainConfig().debug)
             logger.info("[MiraiAdapter] new packet({}): {}", this.getClass().getSimpleName(), packet);
-        Request.Builder builder=new Request.Builder().url(Config.getInst().baseUrl+getTargetedPath());
+        var builder = HttpRequest.newBuilder(new URI(Config.getInst().baseUrl+getTargetedPath()));
         if(getMethod()==HttpMethod.GET){
-            builder.get();
+            builder =builder.GET();
         }else{
-            builder.post(RequestBody.create(packet, MediaType.parse(getMediaType())));
+            builder = builder.POST(HttpRequest.BodyPublishers.ofString(packet));
         }
+        builder.version(HttpClient.Version.HTTP_1_1);
         return builder.build();
     }
     public boolean debugPacketContent(){
         return true;
     }
     @SneakyThrows
-    public Packet send(){
-        Response response = AdapterMain.getHttpClient().newCall(buildRequest()).execute();
-        rawResponse = response.body().string();
-        if (!rawResponse.startsWith("[")) {
-            if (response.code() != 200) {
-                logger.info("Mirai-API-Http return an {}", response.code());
-                logger.info("Response: ", response);
-                result = Result.HTTP_ERROR;
-                return this;
+    public String getRawResponse(){ // spin lock waiting...
+        int count=0;
+        while(rawResponse==null){
+            count++;
+            if(count > Config.getInst().responseWaitTime){
+                logger.warn("[MiraiAdapter] Waiting for response....failed!");
+                break;
             }
-            try {
-                result = gson.fromJson(rawResponse, Status.class).asResult();
-            } catch (JsonSyntaxException e) {
-                logger.error("Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
-                logger.error("Request:", gson.toJson(this));
-            }
-            if (result != Result.SUCCESS) {
-                logger.warn("Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
-            }
+            Thread.sleep(1000L);
         }
+        return rawResponse;
+    }
+    @SneakyThrows
+    public Packet sendSync(){
+        var response=AdapterMain.getHttpClient().send(buildRequest(), HttpResponse.BodyHandlers.ofString());
+        rawResponse=response.body();
+
+
+            if (!rawResponse.startsWith("[")) {
+                if (response.statusCode() != 200) {
+                    logger.info("Mirai-API-Http returned an {}", response.statusCode());
+                    logger.info("Response: ", response);
+                    result = Result.HTTP_ERROR;
+                    return this;
+                }
+                try {
+                    result = gson.fromJson(rawResponse, Status.class).asResult();
+                } catch (JsonSyntaxException e) {
+                    logger.error("[MiraiAdapter] Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
+                    logger.error("[MiraiAdapter] Request:", gson.toJson(this));
+                }
+                if (result != Result.SUCCESS) {
+                    logger.warn("[MiraiAdapter] Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
+                }
+            }
+            return this;
+    }
+    @SneakyThrows
+    public Packet send(){
+        AdapterMain.getHttpClient().sendAsync(buildRequest(), HttpResponse.BodyHandlers.ofString()).thenApply(response->{
+            var trawResponse = response.body();
+            rawResponse=trawResponse;
+            if (!trawResponse.startsWith("[")) {
+                if (response.statusCode() != 200) {
+                    logger.info("Mirai-API-Http returned an {}", response.statusCode());
+                    logger.info("Response: ", response);
+                    result = Result.HTTP_ERROR;
+                    return this;
+                }
+                try {
+                    result = gson.fromJson(trawResponse, Status.class).asResult();
+                } catch (JsonSyntaxException e) {
+                    logger.error("[MiraiAdapter] Packet {} occurs an error while parsing the json: {}", this.getClass().getSimpleName(), response);
+                    logger.error("[MiraiAdapter] Request:", gson.toJson(this));
+                }
+                if (result != Result.SUCCESS) {
+                    logger.warn("[MiraiAdapter] Packet {}' status has something wrong!(Code: {})", this.getClass().getSimpleName(), result);
+                }
+            }
+            return trawResponse;
+        });
         return this;
     }
 

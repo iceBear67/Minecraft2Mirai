@@ -7,10 +7,10 @@ import java.util.Optional;
 
 @Builder
 public class Auth extends Packet {
-    private String authKey;
+    private String verifyKey;
     @Override
     public String getTargetedPath() {
-        return "auth";
+        return "verify";
     }
 
     @Override
@@ -24,9 +24,10 @@ public class Auth extends Packet {
     }
     @Override
     public Auth send(){
-        return this.getClass().cast(super.send());
+        return this.getClass().cast(super.sendSync());
     }
     public Optional<String> asSession(){
+        System.out.println(getRawResponse());
         Response response = gson.fromJson(getRawResponse(), Response.class);
         return Optional.ofNullable(response.session);
     }

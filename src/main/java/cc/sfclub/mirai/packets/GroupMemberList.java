@@ -3,6 +3,7 @@ package cc.sfclub.mirai.packets;
 import cc.sfclub.mirai.Packet;
 import cc.sfclub.mirai.adapts.SBSpigot;
 import cc.sfclub.mirai.packets.received.sender.MiraiGroupSender;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import com.google.gson.JsonParser;
 import lombok.Builder;
 
@@ -26,13 +27,13 @@ public class GroupMemberList extends Packet {
 
     @Override
     public GroupMemberList send() {
-        super.send();
+        super.sendSync();
         return this;
     }
 
     public Set<MiraiGroupSender> asList() {
         Set<MiraiGroupSender> senders = new HashSet<>();
-        SBSpigot.JP.parse(getRawResponse())
+        AdaptedJsonParser.parseString(getRawResponse())
                 .getAsJsonArray().forEach(j -> senders.add(gson.fromJson(j, MiraiGroupSender.class)));
         return senders;
     }

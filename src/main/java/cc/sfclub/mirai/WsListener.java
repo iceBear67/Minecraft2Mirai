@@ -5,63 +5,74 @@ import cc.sfclub.mirai.bot.QQBot;
 import cc.sfclub.mirai.packets.received.message.MiraiMessage;
 import cc.sfclub.mirai.packets.received.message.contact.MiraiContactMessage;
 import cc.sfclub.mirai.packets.received.message.group.MiraiGroupMessage;
+import cc.sfclub.mirai.utils.AdaptedJsonParser;
 import cc.sfclub.mirai.utils.MessageUtil;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WsListener extends WebSocketListener {
+import java.net.http.WebSocket;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+public class WsListener implements WebSocket.Listener {
     private static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(WsListener.class);
-
+    private StringBuilder buffer = new StringBuilder();
+    private CompletableFuture<?> accumulatedMessage = new CompletableFuture<>();
     public WsListener() {
-        logger.info("WsListener Started!");
-    }
 
-    @SneakyThrows
-    @Override
-    public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-        super.onFailure(webSocket, t, response);
-        logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", t.getMessage());
-        t.printStackTrace();
-        AdapterMain.getPlugin(AdapterMain.class).authed = false;
-        AdapterMain.getPlugin(AdapterMain.class).requestReconnect();
     }
 
     @Override
-    public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        super.onClosing(webSocket, code, reason);
+    public void onError(WebSocket webSocket, Throwable error) {
+        logger.error("[MiraiAdapter] WebSocket Connection has a exception:{}", error.getMessage());
+        error.printStackTrace();
+        AdapterMain.INSTANCE.authed = false;
+        AdapterMain.INSTANCE.requestReconnect();
+
+    }
+
+    @Override
+    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
         if (reason.equals("onDisable")) {
-            logger.info("WsListener shutting down...");
-            return;
+            logger.info("[MiraiAdapter] WsListener shutting down...");
+            return null;
         }
         logger.warn("[MiraiAdapter] Connection closing!! Reason:{}", reason);
+        AdapterMain.INSTANCE.authed = false;
+        AdapterMain.INSTANCE.requestReconnect();
+        return null;
     }
 
     @Override
-    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-        super.onOpen(webSocket, response);
-        AdapterMain.getPlugin(AdapterMain.class).reconnectCounter = 0;
-        logger.info("WsListener Connected!");
+    public void onOpen(WebSocket webSocket) {
+        webSocket.request(1);
+        AdapterMain.INSTANCE.reconnectCounter = 0;
+        logger.info("[MiraiAdapter] Connected to Mirai!");
     }
-
     @Override
-    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        super.onMessage(webSocket, text);
-        MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
+    public CompletionStage<?> onText(WebSocket webSocket, CharSequence chars, boolean last) {
+        buffer.append(chars);
+        webSocket.request(1);
+        if(!last){
+            return accumulatedMessage;
+        }
+        // starts.
+        String text = buffer.toString();
+        buffer = new StringBuilder();
+        accumulatedMessage.complete(null);
+        accumulatedMessage = new CompletableFuture<>();
+        MiraiMessage message = AdaptedJsonParser.adaptedSerialize(text.toString(), MiraiMessage.class);
         if (MessageUtil.isMiraiEvent(message.getType())) {
-            onELMessage(webSocket, text);
-            return;
+            onELMessage(webSocket, text.toString());
+            return accumulatedMessage;
         }
         switch (message.getType()) {
             case "GroupMessage":
-                MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text).orElseThrow(IllegalArgumentException::new);
+                MiraiGroupMessage miraiGroupMessage = MiraiGroupMessage.parseJson(text.toString()).orElseThrow(IllegalArgumentException::new);
                 AdapterMain.getMiraiEventBus().post(miraiGroupMessage);
                 //checks..
                 synchronized (this) {
@@ -76,10 +87,11 @@ public class WsListener extends WebSocketListener {
             case "FriendMessage":
                 break;
         }
+        return accumulatedMessage;
     }
 
-    public void onELMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        MiraiMessage message = gson.fromJson(text, MiraiMessage.class);
+    public void onELMessage(WebSocket webSocket,  String text) {
+        MiraiMessage message = AdaptedJsonParser.adaptedSerialize(text, MiraiMessage.class);
         if (!MessageUtil.isMiraiEvent(message.getType())) return;
         String type = message.getType();
         try {
