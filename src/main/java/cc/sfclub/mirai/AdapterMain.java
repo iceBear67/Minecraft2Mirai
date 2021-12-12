@@ -131,7 +131,13 @@ public class AdapterMain extends JavaPlugin {
     @Override
     public void onEnable() {
         INSTANCE = this;
-        onServerStart();
+        Bukkit.getScheduler().runTaskAsynchronously(this,()->{
+            try {
+                onServerStart();
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }); // Try to make sure that we're latest to load avoiding some unknown bugs such as token expired?
     }
     @Override
     public void onDisable() {
@@ -170,7 +176,9 @@ public class AdapterMain extends JavaPlugin {
         }
         getLogger().info("[Reconnecter] Re-connecting to Mirai");
         try {
-            httpClient.newWebSocketBuilder().buildAsync(new URI(Config.getInst().baseUrl.replaceAll("http", "ws").concat("message?sessionKey=").concat(Cred.sessionKey)),new WsListener()).thenApply(ez->wsMessageListener=ez);
+            var url = Config.getInst().baseUrl.replaceAll("http", "ws").concat("all?verifyKey=").concat(Config.getInst().authKey)+"&qq="+ Config.getInst().QQ;
+            getLogger().info("[MiraiAdapter] Connecting to "+ url);
+            wsMessageListener=httpClient.newWebSocketBuilder().buildAsync(new URI(url),new WsListener()).join();
         } catch (URISyntaxException ex) {
             ex.printStackTrace();
         }
