@@ -37,7 +37,7 @@ public class BukkitMessageEvent implements Listener {
         if(Config.getInst().usePrefixFromQQ){
             if(context.startsWith("#")){
                 String sender = miraiGroupMessage.getSender().getMemberName() ;
-                var bcs = TextComponent.fromLegacyText(ChatColor.GRAY+sender+ChatColor.WHITE+" > "+context);
+                var bcs = TextComponent.fromLegacyText(ChatColor.GRAY+sender+ChatColor.WHITE+" > "+context.replaceFirst("#",""));
                 for (BaseComponent bc : bcs) {
                     bc.setHoverEvent(COMPILED_HOVER);
                 }
@@ -66,7 +66,7 @@ public class BukkitMessageEvent implements Listener {
         if(Config.getInst().usePrefixFromMC){
             if(message.startsWith("#")){
                 AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
-                        .sendMessage("[MC] "+sender+": "+message);
+                        .sendMessage("[MC] "+sender+": "+message.replaceFirst("#",""));
             }
         }else{
             AdapterMain.getPlugin(AdapterMain.class).getBot().getGroup(Config.getInst().targetGroup).orElseThrow(AssertionError::new)
