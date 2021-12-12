@@ -84,7 +84,11 @@ public class AdapterMain extends JavaPlugin {
                     //load groups
                     //Core.get().registerBot(new QQBot());
                     //Bot bot = Core.get().bot(QQBot.PLATFORM_NAME).orElseThrow(() -> new IllegalArgumentException("Unknown error"));
+
                     bot = new QQBot();
+                    Bukkit.getScheduler().runTaskTimerAsynchronously(this,()->{
+                        refreshContacts();
+                    },0L,30*20L);
                     try {
                         var url = Config.getInst().baseUrl.replaceAll("http", "ws").concat("all?verifyKey=").concat(Config.getInst().authKey)+"&qq="+ Config.getInst().QQ;
                         getLogger().info("[MiraiAdapter] Connecting to "+ url);
