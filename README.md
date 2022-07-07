@@ -7,7 +7,7 @@ Example:
 ```json
 {
   "baseUrl": "http://localhost:8080/",
-  "QQ": 0,  // bot qq
+  "QQ": xxxx,  // bot qq
   "authKey": ".....",
   "displayMessage": true, // useless in this edition
   "reconnectLimit": 10,
